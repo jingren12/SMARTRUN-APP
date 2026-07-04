@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+  import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
+  CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
