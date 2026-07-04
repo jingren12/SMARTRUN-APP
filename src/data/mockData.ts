@@ -1,4 +1,4 @@
-import {
+import type {
   WeatherData, TrainingPlan, RunSession, LiveRunMetrics, RobotStatus,
   AICoachData, TrainingReport, UserProfile, RoutePoint,
 } from './types';

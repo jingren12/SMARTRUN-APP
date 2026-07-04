@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
-  CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+  CartesianGrid } from 'recharts'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -10,10 +10,8 @@ interface Weather { temp: number; condition: string; aqi: number; aqiLevel: stri
 interface PlanSegment { type: string; duration: number; pace: string; note: string }
 interface TrainingPlan { type: string; title: string; description: string; duration: number; distance: number; intensity: string; calories: number; segments: PlanSegment[] }
 interface RunSession { id: string; date: string; distance: number; duration: number; pace: string; calories: number; avgHeartRate: number; routeName: string; completed: boolean }
-interface AISuggestion { type: string; message: string; priority: string }
 interface RobotStatus { connected: boolean; battery: number; distance: number; mode: string; uwbSignal: number; lidarStatus: string; speed: number; temperature: number; storage: number; firmwareVersion: string }
 interface Achievement { id: string; title: string; icon: string; unlocked: boolean; date?: string }
-interface Equipment { name: string; type: string; distance?: number }
 interface GrowthData { week: string; distance: number; pace: number; heartRate: number }
 interface TrendData { month: string; distance: number; runs: number }
 interface HRZone { zone: string; range: string; percent: number; color: string }
@@ -74,14 +72,6 @@ const hrZones: HRZone[] = [
   { zone: 'Z5', range: '185+', percent: 3, color: '#ff3b5c' },
 ]
 
-const aiSuggest = [
-  { message: '保持节奏，还有2km完成目标' },
-  { message: '注意补水，建议小口慢饮' },
-  { message: '心率偏高，适当降低配速' },
-  { message: '调整呼吸，三步一吸两步一呼' },
-  { message: '最后1km，可以稍微提速' },
-]
-
 const achievements: Achievement[] = [
   { id: 'a1', title: '初出茅庐', icon: '🌟', unlocked: true, date: '2026-01-15' },
   { id: 'a2', title: '百公里俱乐部', icon: '🏃', unlocked: true, date: '2026-03-20' },
@@ -137,9 +127,9 @@ function SectionH({ title, action }: { title: string; action?: string }) {
   )
 }
 
-function Badge({ children, color = '#00ff88' }: { children: ReactNode; color?: string }) {
+function Badge({ children, color = '#00ff88', className = '' }: { children: ReactNode; color?: string; className?: string }) {
   return (
-    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border" style={{ borderColor: `${color}30`, backgroundColor: `${color}10`, color }}>
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${className}`} style={{ borderColor: `${color}30`, backgroundColor: `${color}10`, color }}>
       {children}
     </div>
   )
