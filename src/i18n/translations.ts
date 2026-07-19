@@ -36,6 +36,7 @@ export interface Translations {
     recentRuns: string;
     viewAll: string;
     aiSuggestionTitle: string;
+    aiSuggestionBody: string;
   };
 
   // ─── Run Page ───
@@ -51,6 +52,7 @@ export interface Translations {
     currentPace: string;
     distanceRun: string;
     aiRealtime: string;
+    aiRealtimeText: string;
     metrics: { duration: string; distance: string; heartRate: string; cadence: string };
     sos: string;
   };
@@ -60,6 +62,7 @@ export interface Translations {
     title: string;
     subtitle: string;
     todayAdvice: string;
+    todayAdviceBody: string;
     overallScore: string;
     vsLastWeek: (pct: number) => string;
     runningTech: string;
@@ -128,6 +131,7 @@ export interface Translations {
     m: string;
     ms: string;
     celsius: string;
+    days: string;
   };
 }
 
@@ -163,7 +167,8 @@ const zh: Translations = {
     keepGoing: '继续保持！',
     recentRuns: '最近训练',
     viewAll: '查看全部',
-    aiSuggestionTitle: 'AI 教练建议',
+      aiSuggestionTitle: 'AI 教练建议',
+      aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
   },
   run: {
     followMode: '跟随模式',
@@ -175,14 +180,16 @@ const zh: Translations = {
     follow: '跟随',
     currentPace: '当前配速',
     distanceRun: '已跑',
-    aiRealtime: 'AI 实时指导',
+      aiRealtime: 'AI 实时指导',
+      aiRealtimeText: '保持节奏，步频提升至180。注意呼吸，三步一吸两步一呼。',
     metrics: { duration: '时长', distance: '距离', heartRate: '心率', cadence: '步频' },
     sos: 'SOS',
   },
   aicoach: {
     title: 'AI 教练',
     subtitle: '你的专属跑步教练',
-    todayAdvice: '今日建议',
+      todayAdvice: '今日建议',
+      todayAdviceBody: '今日空气质量良好，适合户外训练。恢复指数82，建议中等强度有氧跑45分钟。注意控制心率在区间2（130-150bpm）。训练前补充300ml水，携带补给。',
     overallScore: '综合评分',
     vsLastWeek: (pct: number) => `↑ ${pct}% vs 上周`,
     runningTech: '跑步技术',
@@ -253,10 +260,10 @@ const zh: Translations = {
     '滨江公园 7.5km': '滨江公园 7.5km',
     '城市绿道 5km': '城市绿道 5km',
     '环湖路线 10km': '环湖路线 10km',
-    '山地越野 12km': '山地越野 12km',
-  },
-  units: { km: 'km', min: 'min', kcal: 'kcal', perKm: '/km', bpm: 'bpm', m: 'm', ms: 'm/s', celsius: '°C' },
-};
+     '山地越野 12km': '山地越野 12km',
+   },
+   units: { km: 'km', min: 'min', kcal: 'kcal', perKm: '/km', bpm: 'bpm', m: 'm', ms: 'm/s', celsius: '°C', days: '天' },
+ };
 
 const en: Translations = {
   nav: {
@@ -290,7 +297,8 @@ const en: Translations = {
     keepGoing: 'Keep going!',
     recentRuns: 'Recent Runs',
     viewAll: 'View All',
-    aiSuggestionTitle: 'AI Coach Suggestion',
+      aiSuggestionTitle: 'AI Coach Suggestion',
+      aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
   },
   run: {
     followMode: 'Follow Mode',
@@ -302,14 +310,16 @@ const en: Translations = {
     follow: 'Following',
     currentPace: 'Current Pace',
     distanceRun: 'Distance',
-    aiRealtime: 'AI Live Coach',
+      aiRealtime: 'AI Live Coach',
+      aiRealtimeText: 'Maintain your pace — raise cadence to 180 steps/min. Remember to breathe: inhale for 3 steps, exhale for 2 steps.',
     metrics: { duration: 'Duration', distance: 'Distance', heartRate: 'Heart Rate', cadence: 'Cadence' },
     sos: 'SOS',
   },
   aicoach: {
     title: 'AI Coach',
     subtitle: 'Your Personal Running Coach',
-    todayAdvice: 'Today\'s Advice',
+      todayAdvice: 'Today\'s Advice',
+      todayAdviceBody: 'Good air quality today — suitable for outdoor training. Recovery index 82. Recommended: 45-minute aerobic run at moderate intensity. Keep heart rate in zone 2 (130-150bpm). Drink 300ml water before training and bring supplies.',
     overallScore: 'Overall Score',
     vsLastWeek: (pct: number) => `↑ ${pct}% vs last week`,
     runningTech: 'Running Technique',
@@ -367,26 +377,26 @@ const en: Translations = {
     equipmentItems: {
       'Nike Vaporfly 3': { type: 'Running Shoes' },
       'Apple Watch Ultra 2': { type: 'Watch' },
-      'SmartRun X1': { type: 'Robot' },
-    },
-    language: 'Language',
-    langZh: '中文',
-    langEn: 'English',
-  },
-  segments: { warmup: 'WU', run: 'Run', sprint: 'SP', cooldown: 'CD' },
-  routes: {
-    '滨江公园': 'Riverside Park',
-    '城市绿道': 'City Greenway',
-    '环湖路线': 'Lake Loop',
-    '小区周边': 'Neighborhood',
-    '山地越野': 'Mountain Trail',
-    '滨江公园 7.5km': 'Riverside Park 7.5km',
-    '城市绿道 5km': 'City Greenway 5km',
-    '环湖路线 10km': 'Lake Loop 10km',
-    '山地越野 12km': 'Mountain Trail 12km',
-  },
-  units: { km: 'km', min: 'min', kcal: 'kcal', perKm: '/km', bpm: 'bpm', m: 'm', ms: 'm/s', celsius: '°C' },
-};
+       'SmartRun X1': { type: 'Robot' },
+     },
+     language: 'Language',
+     langZh: '中文',
+     langEn: 'English',
+   },
+   segments: { warmup: 'WU', run: 'Run', sprint: 'SP', cooldown: 'CD' },
+   routes: {
+     '滨江公园': 'Riverside Park',
+     '城市绿道': 'City Greenway',
+     '环湖路线': 'Lake Loop',
+     '小区周边': 'Neighborhood',
+     '山地越野': 'Mountain Trail',
+     '滨江公园 7.5km': 'Riverside Park 7.5km',
+     '城市绿道 5km': 'City Greenway 5km',
+     '环湖路线 10km': 'Lake Loop 10km',
+     '山地越野 12km': 'Mountain Trail 12km',
+   },
+   units: { km: 'km', min: 'min', kcal: 'kcal', perKm: '/km', bpm: 'bpm', m: 'm', ms: 'm/s', celsius: '°C', days: 'days' },
+ };
 
 export const translations: Record<Lang, Translations> = { zh, en };
 

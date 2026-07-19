@@ -360,7 +360,7 @@ function Home() {
             </div>
             <div>
               <div className="text-white text-[13px] font-medium mb-0.5">{t.home.aiSuggestionTitle}</div>
-              <p className="text-[#a0a0b8] text-[12px] leading-relaxed">今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。</p>
+              <p className="text-[#a0a0b8] text-[12px] leading-relaxed">{t.home.aiSuggestionBody}</p>
             </div>
           </div>
         </GlassCard>
@@ -497,7 +497,7 @@ function RunPage() {
             </div>
             <div className="flex-1">
               <div className="text-white text-[12px] font-medium">{t.run.aiRealtime}</div>
-              <p className="text-[#a0a0b8] text-[11px] leading-relaxed">保持节奏，步频提升至180。注意呼吸，三步一吸两步一呼。</p>
+              <p className="text-[#a0a0b8] text-[11px] leading-relaxed">{t.run.aiRealtimeText}</p>
             </div>
           </GlassCard>
         </motion.div>
@@ -573,7 +573,7 @@ function AICoach() {
             </div>
             <div>
               <div className="text-white text-[14px] font-semibold mb-1">{t.aicoach.todayAdvice}</div>
-              <p className="text-[#a0a0b8] text-[12px] leading-relaxed">今日空气质量良好，适合户外训练。恢复指数82，建议中等强度有氧跑45分钟。注意控制心率在区间2（130-150bpm）。训练前补充300ml水，携带补给。</p>
+              <p className="text-[#a0a0b8] text-[12px] leading-relaxed">{t.aicoach.todayAdviceBody}</p>
             </div>
           </div>
         </GlassCard>
@@ -873,7 +873,7 @@ function Profile() {
           {[
             { label: t.profile.statLabels.totalDist, value: '486', unit: t.units.km, color: '#00ff88', icon: '🏃' },
             { label: t.profile.statLabels.robotDist, value: '320', unit: t.units.km, color: '#4a9eff', icon: '🤖' },
-            { label: t.profile.statLabels.streak, value: '18', unit: lang === 'zh' ? '天' : 'days', color: '#ffd60a', icon: '🔥' },
+            { label: t.profile.statLabels.streak, value: '18', unit: t.units.days, color: '#ffd60a', icon: '🔥' },
             { label: t.profile.statLabels.aiScore, value: '82', unit: t.home.outOf, color: '#accent-purple', icon: '🧠' },
           ].map(s => (
             <GlassCard key={s.label} className="p-3.5">
