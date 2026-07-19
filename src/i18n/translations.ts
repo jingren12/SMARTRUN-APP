@@ -80,6 +80,8 @@ export interface Translations {
     askPlaceholder: string;
     qPrefix: string;
     aPrefix: string;
+    qaQuestions: Record<string, string>;
+    qaAnswers: Record<string, string>;
   };
 
   // ─── Robot Page ───
@@ -117,6 +119,7 @@ export interface Translations {
     language: string;
     langZh: string;
     langEn: string;
+    achievementTitles: Record<string, string>;
   };
 
   // ─── Training Plan Segments ───
@@ -216,6 +219,14 @@ const zh: Translations = {
     askPlaceholder: '向AI教练提问...',
     qPrefix: 'Q: ',
     aPrefix: 'A: ',
+    qaQuestions: {
+      '如何提高步频？': '如何提高步频？',
+      '今天适合高强度训练吗？': '今天适合高强度训练吗？',
+    },
+    qaAnswers: {
+      '建议每周加入2次节奏跑，使用节拍器设置在180bpm。': '建议每周加入2次节奏跑，使用节拍器设置在180bpm。',
+      '恢复指数82，疲劳度35，适合中等强度训练。': '恢复指数82，疲劳度35，适合中等强度训练。',
+    },
   },
   robot: {
     title: 'SmartRun X1',
@@ -262,6 +273,16 @@ const zh: Translations = {
     language: '语言',
     langZh: '中文',
     langEn: 'English',
+    achievementTitles: {
+      '初出茅庐': '初出茅庐',
+      '百公里俱乐部': '百公里俱乐部',
+      '连续两周': '连续两周',
+      '速度突破': '速度突破',
+      '机器人伙伴': '机器人伙伴',
+      '半马挑战': '半马挑战',
+      '月度200km': '月度200km',
+      '完美一周': '完美一周',
+    },
   },
   segments: { warmup: '热', run: '跑', sprint: '冲', cooldown: '冷' },
   routes: {
@@ -355,6 +376,14 @@ const en: Translations = {
     askPlaceholder: 'Ask AI Coach...',
     qPrefix: 'Q: ',
     aPrefix: 'A: ',
+    qaQuestions: {
+      '如何提高步频？': 'How to improve cadence?',
+      '今天适合高强度训练吗？': 'Is today suitable for high-intensity training?',
+    },
+    qaAnswers: {
+      '建议每周加入2次节奏跑，使用节拍器设置在180bpm。': 'Add 2 tempo runs per week, use a metronome set at 180bpm.',
+      '恢复指数82，疲劳度35，适合中等强度训练。': 'Recovery index 82, fatigue 35 — suitable for moderate intensity training.',
+    },
   },
   robot: {
     title: 'SmartRun X1',
@@ -403,10 +432,20 @@ const en: Translations = {
      },
      language: 'Language',
      langZh: '中文',
-     langEn: 'English',
-   },
-   segments: { warmup: 'WU', run: 'Run', sprint: 'SP', cooldown: 'CD' },
-   routes: {
+    langEn: 'English',
+    achievementTitles: {
+      '初出茅庐': 'First Steps',
+      '百公里俱乐部': '100km Club',
+      '连续两周': 'Two-Week Streak',
+      '速度突破': 'Speed Breakthrough',
+      '机器人伙伴': 'Robot Buddy',
+      '半马挑战': 'Half Marathon',
+      '月度200km': '200km Month',
+      '完美一周': 'Perfect Week',
+    },
+  },
+  segments: { warmup: 'WU', run: 'Run', sprint: 'SP', cooldown: 'CD' },
+  routes: {
      '滨江公园': 'Riverside Park',
      '城市绿道': 'City Greenway',
      '环湖路线': 'Lake Loop',

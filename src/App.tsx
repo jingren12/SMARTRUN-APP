@@ -676,8 +676,8 @@ function AICoach() {
               { q: '今天适合高强度训练吗？', a: '恢复指数82，疲劳度35，适合中等强度训练。' },
             ].map((item, i) => (
               <div key={i} className="bg-[#252540]/30 rounded-xl p-3">
-                <div className="text-white text-[12px] font-medium mb-1">{t.aicoach.qPrefix}{item.q}</div>
-                <div className="text-[#a0a0b8] text-[12px]">{t.aicoach.aPrefix}{item.a}</div>
+                <div className="text-white text-[12px] font-medium mb-1">{t.aicoach.qPrefix}{t.aicoach.qaQuestions[item.q] ?? item.q}</div>
+                <div className="text-[#a0a0b8] text-[12px]">{t.aicoach.aPrefix}{t.aicoach.qaAnswers[item.a] ?? item.a}</div>
               </div>
             ))}
           </div>
@@ -895,7 +895,7 @@ function Profile() {
           {achievements.map(a => (
             <div key={a.id} className={`shrink-0 w-20 rounded-2xl p-3 text-center ${a.unlocked ? 'bg-neon/10 border border-neon/20' : 'bg-[#1a1a2e]/40 border border-[#2a2a40]/30 opacity-50'}`}>
               <div className="text-2xl mb-1">{a.icon}</div>
-              <div className="text-white text-[10px] font-medium">{a.title}</div>
+              <div className="text-white text-[10px] font-medium">{t.profile.achievementTitles[a.title] ?? a.title}</div>
             </div>
           ))}
         </div>
