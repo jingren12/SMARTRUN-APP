@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   CartesianGrid } from 'recharts'
+import { useT, useLang } from './i18n/context'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -138,26 +139,27 @@ function Badge({ children, color = '#00ff88', className = '' }: { children: Reac
 // ─── Navigation ───────────────────────────────────────────
 
 function NavBar({ active, onChange, hidden }: { active: Tab; onChange: (t: Tab) => void; hidden: boolean }) {
+  const t = useT()
   if (hidden) return null
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'home', label: '首页', icon: 'M3 10l9-7 9 7v11H3V10zM9 21V12h6v9' },
-    { key: 'run', label: '训练', icon: 'M12 5a2 2 0 100 4 2 2 0 000-4zM5 21l3-7 4 2 3-6 3 2M19 10l-4 8' },
-    { key: 'aicoach', label: 'AI教练', icon: 'M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83' },
-    { key: 'robot', label: '机器人', icon: 'M4 6h16v14H4V6zM9 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM15 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM9 6V4a3 3 0 016 0v2' },
-    { key: 'profile', label: '我的', icon: 'M12 8a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 3.6-8 8-8s8 3 8 8' },
+    { key: 'home', label: t.nav.home, icon: 'M3 10l9-7 9 7v11H3V10zM9 21V12h6v9' },
+    { key: 'run', label: t.nav.training, icon: 'M12 5a2 2 0 100 4 2 2 0 000-4zM5 21l3-7 4 2 3-6 3 2M19 10l-4 8' },
+    { key: 'aicoach', label: t.nav.aicoach, icon: 'M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83' },
+    { key: 'robot', label: t.nav.robot, icon: 'M4 6h16v14H4V6zM9 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM15 13a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM9 6V4a3 3 0 016 0v2' },
+    { key: 'profile', label: t.nav.profile, icon: 'M12 8a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 3.6-8 8-8s8 3 8 8' },
   ]
   return (
     <motion.nav initial={{ y: 100 }} animate={{ y: 0 }} className="absolute bottom-0 left-0 right-0 z-50 pb-[env(safe-area-inset-bottom,4px)]">
       <div className="glass mx-3 mb-2 rounded-[28px] px-2 py-1.5 flex items-center justify-around">
-        {tabs.map(t => {
-          const a = active === t.key
+        {tabs.map(tab => {
+          const a = active === tab.key
           return (
-            <button key={t.key} onClick={() => onChange(t.key)} className="relative flex flex-col items-center gap-0.5 py-1.5 px-3 min-w-0">
+            <button key={tab.key} onClick={() => onChange(tab.key)} className="relative flex flex-col items-center gap-0.5 py-1.5 px-3 min-w-0">
               {a && <motion.div layoutId="nav-ind" className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-neon" transition={{type:'spring',stiffness:500,damping:30}}/>}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={a ? 'text-neon' : 'text-[#6b6b8d]'}>
-                {t.icon.split('M').map((seg, i) => seg ? <path key={i} d={`M${seg}`} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill={a && i < 2 ? 'currentColor' : 'none'} fillOpacity={a ? '0.15' : '0'} /> : null)}
+                {tab.icon.split('M').map((seg, i) => seg ? <path key={i} d={`M${seg}`} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill={a && i < 2 ? 'currentColor' : 'none'} fillOpacity={a ? '0.15' : '0'} /> : null)}
               </svg>
-              <span className={`text-[10px] font-medium ${a ? 'text-neon font-semibold' : 'text-[#6b6b8d]'}`}>{t.label}</span>
+              <span className={`text-[10px] font-medium ${a ? 'text-neon font-semibold' : 'text-[#6b6b8d]'}`}>{tab.label}</span>
             </button>
           )
         })}
@@ -179,9 +181,10 @@ function PageWrap({ tab, children }: { tab: Tab; children: ReactNode }) {
 // ─── Page: Home ────────────────────────────────────────────
 
 function Home() {
+  const t = useT()
   const streakDays = 18
   const recoveryScore = 82
-  const weekDays = ['一','二','三','四','五','六','日']
+  const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
 
   return (
@@ -191,8 +194,8 @@ function Home() {
         {/* Header */}
         <div className="flex items-center justify-between mt-1 mb-4">
           <div>
-            <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-[28px] font-bold text-white tracking-tight">早安, 跑者</motion.h1>
-            <p className="text-[13px] text-[#a0a0b8] mt-0.5">准备好今天的训练了吗？</p>
+            <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-[28px] font-bold text-white tracking-tight">{t.home.greeting}</motion.h1>
+            <p className="text-[13px] text-[#a0a0b8] mt-0.5">{t.home.readyQuestion}</p>
           </div>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-neon/30 to-accent-blue/30 border border-neon/20 flex items-center justify-center">
@@ -206,11 +209,11 @@ function Home() {
         <div className="flex items-center gap-2 mb-5">
           <Badge color="#00ff88">
             <span className="w-1.5 h-1.5 rounded-full bg-neon pulse-glow" />
-            机器人已连接 · {robot.battery}%
+            {t.home.robotConnected}{robot.battery}%
           </Badge>
           <Badge color="#4a9eff">
             <span className="w-1.5 h-1.5 rounded-full bg-accent-blue" />
-            AQI {weather.aqi} · {weather.aqiLevel}
+            {t.home.aqi}{weather.aqi} · {weather.aqiLevel}
           </Badge>
         </div>
 
@@ -218,12 +221,12 @@ function Home() {
         <motion.button whileTap={{ scale: 0.97 }} className="w-full mb-5 relative overflow-hidden rounded-2xl bg-gradient-to-r from-neon/20 via-neon/10 to-transparent border border-neon/20 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white text-[15px] font-semibold">今日训练</div>
-              <div className="text-[#a0a0b8] text-[12px] mt-0.5">{todayPlan.title} · {todayPlan.distance}km</div>
+              <div className="text-white text-[15px] font-semibold">{t.home.todayTraining}</div>
+              <div className="text-[#a0a0b8] text-[12px] mt-0.5">{todayPlan.title} · {todayPlan.distance}{t.units.km}</div>
             </div>
             <div className="flex items-center gap-2 bg-neon/20 rounded-xl px-4 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><polyline points="12 6 12 12 16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <span className="text-neon text-[13px] font-semibold">开始</span>
+              <span className="text-neon text-[13px] font-semibold">{t.home.start}</span>
             </div>
           </div>
           {/* Decorative glow */}
@@ -231,22 +234,22 @@ function Home() {
         </motion.button>
 
         {/* Today's Plan Detail */}
-        <SectionH title="今日训练计划" />
+        <SectionH title={t.home.todayPlan} />
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               <span className="text-white text-[15px] font-semibold">{todayPlan.title}</span>
             </div>
-            <Badge color={todayPlan.intensity === 'easy' ? '#00ff88' : todayPlan.intensity === 'moderate' ? '#ffd60a' : '#ff6b35'}>{todayPlan.intensity === 'easy' ? '轻松' : todayPlan.intensity === 'moderate' ? '中等' : '高强度'}</Badge>
+            <Badge color={todayPlan.intensity === 'easy' ? '#00ff88' : todayPlan.intensity === 'moderate' ? '#ffd60a' : '#ff6b35'}>{t.home.intensity[todayPlan.intensity as 'easy' | 'moderate' | 'hard']}</Badge>
           </div>
           <p className="text-[#a0a0b8] text-[13px] leading-relaxed mb-3">{todayPlan.description}</p>
           <div className="stats-grid mb-3">
             {[
-              { label: '距离', value: todayPlan.distance, unit: 'km' },
-              { label: '时长', value: todayPlan.duration, unit: 'min' },
-              { label: '消耗', value: todayPlan.calories, unit: 'kcal' },
-              { label: '配速', value: '5:20', unit: '/km' },
+              { label: t.home.stats.distance, value: todayPlan.distance, unit: t.units.km },
+              { label: t.home.stats.duration, value: todayPlan.duration, unit: t.units.min },
+              { label: t.home.stats.calories, value: todayPlan.calories, unit: t.units.kcal },
+              { label: t.home.stats.pace, value: '5:20', unit: t.units.perKm },
             ].map(s => (
               <div key={s.label} className="bg-[#252540]/50 rounded-xl p-2.5 text-center">
                 <div className="text-white text-lg font-bold">{s.value}</div>
@@ -259,11 +262,11 @@ function Home() {
             {todayPlan.segments.map((seg, i) => (
               <div key={i} className="flex items-center gap-3 bg-[#252540]/30 rounded-xl px-3 py-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${seg.type === 'warmup' ? 'bg-accent-blue/20 text-accent-blue' : seg.type === 'run' ? 'bg-neon/20 text-neon' : seg.type === 'sprint' ? 'bg-accent-orange/20 text-accent-orange' : 'bg-accent-purple/20 text-accent-purple'}`}>
-                  {seg.type === 'warmup' ? '热' : seg.type === 'run' ? '跑' : seg.type === 'sprint' ? '冲' : '冷'}
+                  {t.segments[seg.type as 'warmup' | 'run' | 'sprint' | 'cooldown']}
                 </div>
                 <div className="flex-1">
                   <div className="text-white text-[13px] font-medium">{seg.note}</div>
-                  <div className="text-[#6b6b8d] text-[11px]">{seg.duration}min · {seg.pace}/km</div>
+                  <div className="text-[#6b6b8d] text-[11px]">{seg.duration}{t.units.min} · {seg.pace}{t.units.perKm}</div>
                 </div>
               </div>
             ))}
@@ -271,38 +274,38 @@ function Home() {
         </GlassCard>
 
         {/* Recovery + AI Coach */}
-        <SectionH title="训练状态" />
+        <SectionH title={t.home.trainingStatus} />
         <div className="flex gap-3 mb-5">
           <GlassCard className="flex-1 p-4">
-            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">恢复指数</div>
+            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.recoveryIndex}</div>
             <ProgressRing pct={recoveryScore} size={72} color="#00ff88">
               <div className="text-center">
                 <div className="text-white text-lg font-bold">{recoveryScore}</div>
-                <div className="text-[#6b6b8d] text-[9px]">/100</div>
+                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
               </div>
             </ProgressRing>
             <div className="text-center mt-2">
-              <div className="text-neon text-[11px] font-medium">良好</div>
-              <div className="text-[#6b6b8d] text-[10px]">建议中等强度</div>
+              <div className="text-neon text-[11px] font-medium">{t.home.recoveryGood}</div>
+              <div className="text-[#6b6b8d] text-[10px]">{t.home.recoverySuggestion}</div>
             </div>
           </GlassCard>
           <GlassCard className="flex-1 p-4">
-            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">疲劳程度</div>
+            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.fatigueLevel}</div>
             <ProgressRing pct={35} size={72} color="#4a9eff">
               <div className="text-center">
                 <div className="text-white text-lg font-bold">35</div>
-                <div className="text-[#6b6b8d] text-[9px]">/100</div>
+                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
               </div>
             </ProgressRing>
             <div className="text-center mt-2">
-              <div className="text-accent-blue text-[11px] font-medium">较低</div>
-              <div className="text-[#6b6b8d] text-[10px]">适合训练</div>
+              <div className="text-accent-blue text-[11px] font-medium">{t.home.fatigueLow}</div>
+              <div className="text-[#6b6b8d] text-[10px]">{t.home.fatigueSuggestion}</div>
             </div>
           </GlassCard>
         </div>
 
         {/* Weekly Streak */}
-        <SectionH title="本周训练" />
+        <SectionH title={t.home.thisWeek} />
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center justify-around mb-2">
             {weekDays.map((d, i) => (
@@ -317,14 +320,14 @@ function Home() {
           <div className="flex items-center justify-center gap-2 mt-2 pt-3 border-t border-[#2a2a40]/50">
             <span className="text-2xl">🔥</span>
             <div>
-              <div className="text-white text-[15px] font-bold">{streakDays} 天连续训练</div>
-              <div className="text-[#6b6b8d] text-[11px]">继续保持！</div>
+              <div className="text-white text-[15px] font-bold">{t.home.daysStreak(streakDays)}</div>
+              <div className="text-[#6b6b8d] text-[11px]">{t.home.keepGoing}</div>
             </div>
           </div>
         </GlassCard>
 
         {/* Recent Runs */}
-        <SectionH title="最近训练" action="查看全部" />
+        <SectionH title={t.home.recentRuns} action={t.home.viewAll} />
         <div className="space-y-2 mb-5">
           {recentRuns.slice(0, 3).map(r => (
             <GlassCard key={r.id} onClick={() => {}} className="p-3 flex items-center gap-3">
@@ -333,15 +336,15 @@ function Home() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-white text-[14px] font-semibold">{r.routeName}</span>
+                  <span className="text-white text-[14px] font-semibold">{t.routes[r.routeName] ?? r.routeName}</span>
                   <span className="text-[#6b6b8d] text-[11px]">{r.date}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-[12px] text-[#a0a0b8]">{r.distance}km</span>
+                  <span className="text-[12px] text-[#a0a0b8]">{r.distance}{t.units.km}</span>
                   <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
-                  <span className="text-[12px] text-[#a0a0b8]">{r.pace}/km</span>
+                  <span className="text-[12px] text-[#a0a0b8]">{r.pace}{t.units.perKm}</span>
                   <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
-                  <span className="text-[12px] text-[#a0a0b8]">{r.duration}min</span>
+                  <span className="text-[12px] text-[#a0a0b8]">{r.duration}{t.units.min}</span>
                 </div>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#4a4a6a]"><polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -356,7 +359,7 @@ function Home() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </div>
             <div>
-              <div className="text-white text-[13px] font-medium mb-0.5">AI 教练建议</div>
+              <div className="text-white text-[13px] font-medium mb-0.5">{t.home.aiSuggestionTitle}</div>
               <p className="text-[#a0a0b8] text-[12px] leading-relaxed">今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。</p>
             </div>
           </div>
@@ -369,6 +372,7 @@ function Home() {
 // ─── Page: Run ────────────────────────────────────────────
 
 function RunPage() {
+  const t = useT()
   const [active, setActive] = useState(false)
 
   if (!active) {
@@ -391,31 +395,31 @@ function RunPage() {
               <circle cx="200" cy="74" r="5" fill="#00ff88" stroke="#0a0a0f" strokeWidth="2" />
             </svg>
             <div className="absolute bottom-3 left-3 glass rounded-xl px-3 py-1.5">
-              <span className="text-white text-[11px] font-medium">滨江公园 · 7.5km</span>
+              <span className="text-white text-[11px] font-medium">{t.routes['滨江公园']} · 7.5{t.units.km}</span>
             </div>
             <div className="absolute top-3 right-3 glass rounded-xl px-2.5 py-1">
-              <span className="text-neon text-[10px] font-medium flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-neon pulse-glow" />跟随模式</span>
+              <span className="text-neon text-[10px] font-medium flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-neon pulse-glow" />{t.run.followMode}</span>
             </div>
           </div>
 
           {/* Route Selection */}
-          <SectionH title="选择路线" />
+          <SectionH title={t.run.chooseRoute} />
           <div className="flex gap-2 mb-5 overflow-x-auto scrollable pb-1">
             {['滨江公园 7.5km', '城市绿道 5km', '环湖路线 10km', '山地越野 12km'].map(r => (
               <button key={r} className="shrink-0 glass rounded-2xl px-4 py-3 border border-[#2a2a40]/40 hover:border-neon/30 transition-colors">
-                <div className="text-white text-[13px] font-medium whitespace-nowrap">{r}</div>
+                <div className="text-white text-[13px] font-medium whitespace-nowrap">{t.routes[r] ?? r}</div>
               </button>
             ))}
           </div>
 
           {/* Quick Stats */}
-          <SectionH title="上次训练" />
+          <SectionH title={t.run.lastTraining} />
           <div className="stats-grid mb-5">
             {[
-              { label: '距离', value: '8.2', unit: 'km' },
-              { label: '时长', value: '42', unit: 'min' },
-              { label: '配速', value: '5:07', unit: '/km' },
-              { label: '心率', value: '158', unit: 'bpm' },
+              { label: t.run.metrics.distance, value: '8.2', unit: t.units.km },
+              { label: t.run.metrics.duration, value: '42', unit: t.units.min },
+              { label: t.home.stats.pace, value: '5:07', unit: t.units.perKm },
+              { label: t.run.metrics.heartRate, value: '158', unit: t.units.bpm },
             ].map(s => (
               <GlassCard key={s.label} className="p-3 text-center">
                 <div className="text-white text-xl font-bold">{s.value}</div>
@@ -426,17 +430,22 @@ function RunPage() {
 
           {/* Goal Setting */}
           <GlassCard className="p-4 mb-5">
-            <div className="text-white text-[15px] font-semibold mb-3">训练目标</div>
+            <div className="text-white text-[15px] font-semibold mb-3">{t.run.trainingGoal}</div>
             <div className="flex gap-3">
-              {['距离', '时长', '配速', '自由'].map(g => (
-                <button key={g} className={`flex-1 rounded-xl py-2.5 text-center text-[13px] font-medium transition-all ${g === '距离' ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}>{g}</button>
+              {([
+                { key: 'distance', label: t.run.goalTypes.distance },
+                { key: 'duration', label: t.run.goalTypes.duration },
+                { key: 'pace', label: t.run.goalTypes.pace },
+                { key: 'free', label: t.run.goalTypes.free },
+              ] as const).map(g => (
+                <button key={g.key} className={`flex-1 rounded-xl py-2.5 text-center text-[13px] font-medium transition-all ${g.key === 'distance' ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}>{g.label}</button>
               ))}
             </div>
           </GlassCard>
 
           {/* Start Button */}
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActive(true)} className="w-full mb-8 py-4 rounded-2xl bg-neon text-black font-bold text-[17px] tracking-tight shadow-lg shadow-neon/20">
-            开始训练
+            {t.run.startTraining}
           </motion.button>
         </div>
       </div>
@@ -452,8 +461,8 @@ function RunPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div className="flex items-center gap-2">
-          <Badge color="#00ff88" className="!px-2"><span className="w-1 h-1 rounded-full bg-neon pulse-glow" />跟随</Badge>
-          <Badge color="#ffd60a" className="!px-2">🤖 {robot.distance}m</Badge>
+          <Badge color="#00ff88" className="!px-2"><span className="w-1 h-1 rounded-full bg-neon pulse-glow" />{t.run.follow}</Badge>
+          <Badge color="#ffd60a" className="!px-2">🤖 {robot.distance}{t.units.m}</Badge>
         </div>
         <div className="flex items-center gap-1.5">
           <ProgressRing pct={robot.battery} size={28} stroke={3} color="#00ff88" bg="#2a2a40">
@@ -471,12 +480,12 @@ function RunPage() {
           <circle cx="200" cy="176" r="6" fill="#00ff88" stroke="#000" strokeWidth="2" />
           {/* Pace overlay */}
           <div className="absolute top-3 left-3 glass rounded-xl px-3 py-2">
-            <div className="text-[#a0a0b8] text-[10px]">当前配速</div>
+            <div className="text-[#a0a0b8] text-[10px]">{t.run.currentPace}</div>
             <div className="text-white text-xl font-bold font-mono">5:18</div>
           </div>
           <div className="absolute top-3 right-3 glass rounded-xl px-3 py-2 text-right">
-            <div className="text-[#a0a0b8] text-[10px]">已跑</div>
-            <div className="text-white text-xl font-bold">3.85km</div>
+            <div className="text-[#a0a0b8] text-[10px]">{t.run.distanceRun}</div>
+            <div className="text-white text-xl font-bold">3.85{t.units.km}</div>
           </div>
         </svg>
 
@@ -487,7 +496,7 @@ function RunPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" stroke="currentColor" strokeWidth="1.5"/><path d="M19 10v2a7 7 0 01-14 0v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-white text-[12px] font-medium">AI 实时指导</div>
+              <div className="text-white text-[12px] font-medium">{t.run.aiRealtime}</div>
               <p className="text-[#a0a0b8] text-[11px] leading-relaxed">保持节奏，步频提升至180。注意呼吸，三步一吸两步一呼。</p>
             </div>
           </GlassCard>
@@ -498,19 +507,19 @@ function RunPage() {
       <div className="glass rounded-t-[28px] px-4 pt-3 pb-[env(safe-area-inset-bottom,20px)]">
         <div className="flex items-center justify-between mb-3">
           <div className="text-center">
-            <div className="text-[#6b6b8d] text-[10px]">时长</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.run.metrics.duration}</div>
             <div className="text-white text-lg font-bold font-mono">22:00</div>
           </div>
           <div className="text-center">
-            <div className="text-[#6b6b8d] text-[10px]">距离</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.run.metrics.distance}</div>
             <div className="text-white text-lg font-bold font-mono">3.85</div>
           </div>
           <div className="text-center">
-            <div className="text-[#6b6b8d] text-[10px]">心率</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.run.metrics.heartRate}</div>
             <div className="text-accent-orange text-lg font-bold font-mono">156</div>
           </div>
           <div className="text-center">
-            <div className="text-[#6b6b8d] text-[10px]">步频</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.run.metrics.cadence}</div>
             <div className="text-white text-lg font-bold font-mono">176</div>
           </div>
         </div>
@@ -531,7 +540,7 @@ function RunPage() {
 
       {/* SOS */}
       <motion.button whileTap={{ scale: 0.9 }} className="absolute top-16 right-4 w-10 h-10 rounded-full bg-accent-red/90 flex items-center justify-center shadow-lg shadow-accent-red/30">
-        <span className="text-white text-[10px] font-bold">SOS</span>
+        <span className="text-white text-[10px] font-bold">{t.run.sos}</span>
       </motion.button>
     </div>
   )
@@ -540,6 +549,7 @@ function RunPage() {
 // ─── Page: AI Coach ─────────────────────────────────────
 
 function AICoach() {
+  const t = useT()
   return (
     <div className="h-full flex flex-col">
       <StatusBar />
@@ -547,8 +557,8 @@ function AICoach() {
         {/* Header */}
         <div className="flex items-center justify-between mt-1 mb-5">
           <div>
-            <motion.h1 initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} className="text-[28px] font-bold text-white tracking-tight">AI 教练</motion.h1>
-            <p className="text-[#a0a0b8] text-[13px] mt-0.5">你的专属跑步教练</p>
+            <motion.h1 initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} className="text-[28px] font-bold text-white tracking-tight">{t.aicoach.title}</motion.h1>
+            <p className="text-[#a0a0b8] text-[13px] mt-0.5">{t.aicoach.subtitle}</p>
           </div>
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 border border-accent-purple/20 flex items-center justify-center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -562,7 +572,7 @@ function AICoach() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/></svg>
             </div>
             <div>
-              <div className="text-white text-[14px] font-semibold mb-1">今日建议</div>
+              <div className="text-white text-[14px] font-semibold mb-1">{t.aicoach.todayAdvice}</div>
               <p className="text-[#a0a0b8] text-[12px] leading-relaxed">今日空气质量良好，适合户外训练。恢复指数82，建议中等强度有氧跑45分钟。注意控制心率在区间2（130-150bpm）。训练前补充300ml水，携带补给。</p>
             </div>
           </div>
@@ -574,27 +584,27 @@ function AICoach() {
             <ProgressRing pct={82} size={64} color="#00ff88">
               <div className="text-white text-sm font-bold">82</div>
             </ProgressRing>
-            <div className="text-white text-[11px] font-medium mt-2">综合评分</div>
-            <div className="text-[#6b6b8d] text-[10px]">↑ 5% vs 上周</div>
+            <div className="text-white text-[11px] font-medium mt-2">{t.aicoach.overallScore}</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.aicoach.vsLastWeek(5)}</div>
           </GlassCard>
           <GlassCard className="flex-1 p-4 text-center">
             <ProgressRing pct={78} size={64} color="#4a9eff">
               <div className="text-white text-sm font-bold">78</div>
             </ProgressRing>
-            <div className="text-white text-[11px] font-medium mt-2">跑步技术</div>
-            <div className="text-[#6b6b8d] text-[10px]">步频待提升</div>
+            <div className="text-white text-[11px] font-medium mt-2">{t.aicoach.runningTech}</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.aicoach.cadenceNeedsWork}</div>
           </GlassCard>
           <GlassCard className="flex-1 p-4 text-center">
             <ProgressRing pct={85} size={64} color="#ffd60a">
               <div className="text-white text-sm font-bold">85</div>
             </ProgressRing>
-            <div className="text-white text-[11px] font-medium mt-2">耐力指数</div>
-            <div className="text-[#6b6b8d] text-[10px]">↑ 3% vs 上周</div>
+            <div className="text-white text-[11px] font-medium mt-2">{t.aicoach.enduranceIndex}</div>
+            <div className="text-[#6b6b8d] text-[10px]">{t.aicoach.vsLastWeek(3)}</div>
           </GlassCard>
         </div>
 
         {/* Weekly Mileage Chart */}
-        <SectionH title="周跑量趋势" />
+        <SectionH title={t.aicoach.weeklyMileage} />
         <GlassCard className="p-4 mb-5">
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
@@ -611,7 +621,7 @@ function AICoach() {
         </GlassCard>
 
         {/* Monthly Trend */}
-        <SectionH title="月度统计" />
+        <SectionH title={t.aicoach.monthlyStats} />
         <GlassCard className="p-4 mb-5">
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
@@ -628,14 +638,14 @@ function AICoach() {
         </GlassCard>
 
         {/* Heart Rate Zones */}
-        <SectionH title="心率区间分布" />
+        <SectionH title={t.aicoach.hrZoneDist} />
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <ProgressRing pct={65} size={72} color="#00ff88">
                 <div className="text-center">
                   <div className="text-white text-sm font-bold">Z2</div>
-                  <div className="text-[#6b6b8d] text-[8px]">主区间</div>
+                  <div className="text-[#6b6b8d] text-[8px]">{t.aicoach.primaryZone}</div>
                 </div>
               </ProgressRing>
             </div>
@@ -654,10 +664,10 @@ function AICoach() {
         </GlassCard>
 
         {/* AI Chat */}
-        <SectionH title="AI 问答" />
+        <SectionH title={t.aicoach.aiQa} />
         <GlassCard className="p-4 mb-6">
           <div className="flex items-center gap-3 bg-[#252540]/50 rounded-2xl px-4 py-3 mb-3">
-            <input placeholder="向AI教练提问..." className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]" />
+            <input placeholder={t.aicoach.askPlaceholder} className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]" />
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><path d="M22 2L11 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
           </div>
           <div className="space-y-2">
@@ -666,8 +676,8 @@ function AICoach() {
               { q: '今天适合高强度训练吗？', a: '恢复指数82，疲劳度35，适合中等强度训练。' },
             ].map((item, i) => (
               <div key={i} className="bg-[#252540]/30 rounded-xl p-3">
-                <div className="text-white text-[12px] font-medium mb-1">Q: {item.q}</div>
-                <div className="text-[#a0a0b8] text-[12px]">A: {item.a}</div>
+                <div className="text-white text-[12px] font-medium mb-1">{t.aicoach.qPrefix}{item.q}</div>
+                <div className="text-[#a0a0b8] text-[12px]">{t.aicoach.aPrefix}{item.a}</div>
               </div>
             ))}
           </div>
@@ -680,11 +690,12 @@ function AICoach() {
 // ─── Page: Robot ──────────────────────────────────────────
 
 function RobotPage() {
+  const t = useT()
   const modes = [
-    { key: 'follow', label: '跟随模式', icon: '🚶', desc: '自动跟随跑步者', color: '#00ff88', active: true },
-    { key: 'supply', label: '补给模式', icon: '💧', desc: '携带补给物资', color: '#4a9eff', active: false },
-    { key: 'patrol', label: '自动跟拍', icon: '📷', desc: 'AI自动跟拍', color: '#ffd60a', active: false },
-    { key: 'return', label: '返回模式', icon: '🏠', desc: '自动返回基站', color: '#ff6b35', active: false },
+    { key: 'follow', label: t.robot.modes.follow.label, icon: '🚶', desc: t.robot.modes.follow.desc, color: '#00ff88', active: true },
+    { key: 'supply', label: t.robot.modes.supply.label, icon: '💧', desc: t.robot.modes.supply.desc, color: '#4a9eff', active: false },
+    { key: 'patrol', label: t.robot.modes.patrol.label, icon: '📷', desc: t.robot.modes.patrol.desc, color: '#ffd60a', active: false },
+    { key: 'return', label: t.robot.modes.return.label, icon: '🏠', desc: t.robot.modes.return.desc, color: '#ff6b35', active: false },
   ]
 
   return (
@@ -694,12 +705,12 @@ function RobotPage() {
         {/* Header */}
         <div className="flex items-center justify-between mt-1 mb-4">
           <div>
-            <motion.h1 initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} className="text-[28px] font-bold text-white tracking-tight">SmartRun X1</motion.h1>
-            <p className="text-[#a0a0b8] text-[13px] mt-0.5">固件 {robot.firmwareVersion}</p>
+            <motion.h1 initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} className="text-[28px] font-bold text-white tracking-tight">{t.robot.title}</motion.h1>
+            <p className="text-[#a0a0b8] text-[13px] mt-0.5">{t.robot.firmware}{robot.firmwareVersion}</p>
           </div>
           <Badge color="#00ff88">
             <span className="w-1.5 h-1.5 rounded-full bg-neon pulse-glow" />
-            已连接
+            {t.robot.connected}
           </Badge>
         </div>
 
@@ -715,10 +726,10 @@ function RobotPage() {
             </ProgressRing>
             <div className="flex-1 space-y-2">
               {[
-                { label: '距离', value: `${robot.distance}m` },
-                { label: '速度', value: `${robot.speed}m/s` },
-                { label: '温度', value: `${robot.temperature}°C` },
-                { label: '存储', value: `${robot.storage}%` },
+                { label: t.robot.labels.distance, value: `${robot.distance}${t.units.m}` },
+                { label: t.robot.labels.speed, value: `${robot.speed}${t.units.ms}` },
+                { label: t.robot.labels.temperature, value: `${robot.temperature}${t.units.celsius}` },
+                { label: t.robot.labels.storage, value: `${robot.storage}%` },
               ].map(s => (
                 <div key={s.label} className="flex items-center justify-between">
                   <span className="text-[#a0a0b8] text-[12px]">{s.label}</span>
@@ -730,13 +741,13 @@ function RobotPage() {
         </GlassCard>
 
         {/* Signal Status */}
-        <SectionH title="连接状态" />
+        <SectionH title={t.robot.connectionStatus} />
         <GlassCard className="p-4 mb-5">
           <div className="flex gap-4">
             {[
-              { label: 'UWB', value: `${robot.uwbSignal}%`, color: '#00ff88', icon: '📡' },
-              { label: 'LiDAR', value: robot.lidarStatus === 'active' ? '运行中' : '待机', color: '#4a9eff', icon: '🔍' },
-              { label: 'GPS', value: '强信号', color: '#ffd60a', icon: '🛰️' },
+              { label: t.robot.signalLabels.uwb, value: `${robot.uwbSignal}%`, color: '#00ff88', icon: '📡' },
+              { label: t.robot.signalLabels.lidar, value: robot.lidarStatus === 'active' ? t.robot.lidarActive : t.robot.lidarStandby, color: '#4a9eff', icon: '🔍' },
+              { label: t.robot.signalLabels.gps, value: t.robot.gpsStrong, color: '#ffd60a', icon: '🛰️' },
             ].map(s => (
               <div key={s.label} className="flex-1 bg-[#252540]/50 rounded-xl p-3 text-center">
                 <div className="text-lg mb-1">{s.icon}</div>
@@ -748,7 +759,7 @@ function RobotPage() {
         </GlassCard>
 
         {/* Mode Selection */}
-        <SectionH title="工作模式" />
+        <SectionH title={t.robot.workMode} />
         <div className="grid grid-cols-2 gap-3 mb-5">
           {modes.map(m => (
             <motion.button key={m.key} whileTap={{ scale: 0.97 }} className={`rounded-2xl p-4 border text-left transition-all ${m.active ? 'border-neon/30 bg-neon/10' : 'border-[#2a2a40]/40 bg-[#1a1a2e]/40'}`}>
@@ -762,7 +773,7 @@ function RobotPage() {
         </div>
 
         {/* Remote Control */}
-        <SectionH title="远程控制" />
+        <SectionH title={t.robot.remoteControl} />
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center justify-center gap-6 py-2">
             <div />
@@ -795,13 +806,13 @@ function RobotPage() {
         </GlassCard>
 
         {/* Settings */}
-        <SectionH title="设备设置" />
+        <SectionH title={t.robot.deviceSettings} />
         <div className="space-y-2 mb-6">
           {[
-            { label: 'OTA 升级', icon: '⬆️', desc: '当前版本 v2.4.1' },
-            { label: '设备自检', icon: '🔧', desc: '所有系统运行正常' },
-            { label: '校准传感器', icon: '🎯', desc: 'UWB / LiDAR' },
-            { label: '重置连接', icon: '🔄', desc: '重新配对设备' },
+            { label: t.robot.settings.ota.label, icon: '⬆️', desc: t.robot.settings.ota.desc },
+            { label: t.robot.settings.selfCheck.label, icon: '🔧', desc: t.robot.settings.selfCheck.desc },
+            { label: t.robot.settings.calibrate.label, icon: '🎯', desc: t.robot.settings.calibrate.desc },
+            { label: t.robot.settings.reset.label, icon: '🔄', desc: t.robot.settings.reset.desc },
           ].map(s => (
             <GlassCard key={s.label} className="p-3 flex items-center gap-3">
               <span className="text-lg">{s.icon}</span>
@@ -821,6 +832,8 @@ function RobotPage() {
 // ─── Page: Profile ────────────────────────────────────────
 
 function Profile() {
+  const t = useT()
+  const { lang, setLang } = useLang()
   return (
     <div className="h-full flex flex-col">
       <StatusBar />
@@ -832,36 +845,36 @@ function Profile() {
           </motion.div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-white text-[22px] font-bold tracking-tight">跑者</h1>
-              <Badge color="#ffd60a">Plus 会员</Badge>
+              <h1 className="text-white text-[22px] font-bold tracking-tight">{t.profile.name}</h1>
+              <Badge color="#ffd60a">{t.profile.plusMember}</Badge>
             </div>
-            <p className="text-[#a0a0b8] text-[13px] mt-0.5">白银跑者 · Lv.12</p>
+            <p className="text-[#a0a0b8] text-[13px] mt-0.5">{t.profile.levelTitle(12, '白银跑者')} · Lv.12</p>
           </div>
         </div>
 
         {/* Level Progress */}
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white text-[13px] font-semibold">Lv.12 白银跑者</span>
-            <span className="text-[#6b6b8d] text-[11px]">下一级: Lv.13</span>
+            <span className="text-white text-[13px] font-semibold">Lv.12 {t.profile.levelTitle(12, '白银跑者')}</span>
+            <span className="text-[#6b6b8d] text-[11px]">{t.profile.nextLevel(13)}</span>
           </div>
           <div className="h-2 rounded-full bg-[#2a2a40] overflow-hidden mb-1">
             <motion.div initial={{ width: 0 }} animate={{ width: '68%' }} transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-neon to-accent-blue" />
           </div>
           <div className="flex items-center justify-between text-[10px] text-[#6b6b8d]">
-            <span>0 km</span>
-            <span>目标 500 km</span>
-            <span>486 km</span>
+            <span>{t.profile.levelProgress.zero}</span>
+            <span>{t.profile.levelProgress.goal}</span>
+            <span>486 {t.units.km}</span>
           </div>
         </GlassCard>
 
         {/* Stats Grid */}
         <div className="stats-grid mb-5">
           {[
-            { label: '总距离', value: '486', unit: 'km', color: '#00ff88', icon: '🏃' },
-            { label: '机器人陪跑', value: '320', unit: 'km', color: '#4a9eff', icon: '🤖' },
-            { label: '连续训练', value: '18', unit: '天', color: '#ffd60a', icon: '🔥' },
-            { label: 'AI评分', value: '82', unit: '/100', color: '#accent-purple', icon: '🧠' },
+            { label: t.profile.statLabels.totalDist, value: '486', unit: t.units.km, color: '#00ff88', icon: '🏃' },
+            { label: t.profile.statLabels.robotDist, value: '320', unit: t.units.km, color: '#4a9eff', icon: '🤖' },
+            { label: t.profile.statLabels.streak, value: '18', unit: lang === 'zh' ? '天' : 'days', color: '#ffd60a', icon: '🔥' },
+            { label: t.profile.statLabels.aiScore, value: '82', unit: t.home.outOf, color: '#accent-purple', icon: '🧠' },
           ].map(s => (
             <GlassCard key={s.label} className="p-3.5">
               <div className="flex items-center justify-between mb-1">
@@ -877,7 +890,7 @@ function Profile() {
         </div>
 
         {/* Achievements */}
-        <SectionH title="成就" action="查看全部" />
+        <SectionH title={t.profile.achievements} action={t.home.viewAll} />
         <div className="flex gap-2 overflow-x-auto scrollable pb-1 mb-5">
           {achievements.map(a => (
             <div key={a.id} className={`shrink-0 w-20 rounded-2xl p-3 text-center ${a.unlocked ? 'bg-neon/10 border border-neon/20' : 'bg-[#1a1a2e]/40 border border-[#2a2a40]/30 opacity-50'}`}>
@@ -888,12 +901,12 @@ function Profile() {
         </div>
 
         {/* Equipment */}
-        <SectionH title="装备管理" />
+        <SectionH title={t.profile.equipment} />
         <div className="space-y-2 mb-5">
           {[
-            { name: 'Nike Vaporfly 3', type: '跑鞋', dist: '320km', icon: '👟' },
-            { name: 'Apple Watch Ultra 2', type: '手表', icon: '⌚' },
-            { name: 'SmartRun X1', type: '机器人', dist: '320km', icon: '🤖' },
+            { name: 'Nike Vaporfly 3', type: t.profile.equipmentItems['Nike Vaporfly 3'].type, dist: `320${t.units.km}`, icon: '👟' },
+            { name: 'Apple Watch Ultra 2', type: t.profile.equipmentItems['Apple Watch Ultra 2'].type, icon: '⌚' },
+            { name: 'SmartRun X1', type: t.profile.equipmentItems['SmartRun X1'].type, dist: `320${t.units.km}`, icon: '🤖' },
           ].map(e => (
             <GlassCard key={e.name} className="p-3 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#252540]/50 flex items-center justify-center text-lg">{e.icon}</div>
@@ -907,14 +920,33 @@ function Profile() {
         </div>
 
         {/* Settings */}
-        <SectionH title="设置" />
+        <SectionH title={t.profile.settings} />
         <div className="space-y-2 mb-6">
+          {/* Language Toggle */}
+          <GlassCard className="p-3 flex items-center gap-3 mb-2">
+            <span className="text-lg">🌐</span>
+            <span className="flex-1 text-white text-[13px] font-medium">{t.profile.language}</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setLang('zh')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${lang === 'zh' ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#6b6b8d]'}`}
+              >
+                {t.profile.langZh}
+              </button>
+              <button
+                onClick={() => setLang('en')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${lang === 'en' ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#6b6b8d]'}`}
+              >
+                {t.profile.langEn}
+              </button>
+            </div>
+          </GlassCard>
           {[
-            { label: '好友', icon: '👥' },
-            { label: '会员中心', icon: '⭐' },
-            { label: '精彩视频', icon: '🎬' },
-            { label: '训练相册', icon: '🖼️' },
-            { label: '系统设置', icon: '⚙️' },
+            { label: t.profile.settingItems.friends, icon: '👥' },
+            { label: t.profile.settingItems.membership, icon: '⭐' },
+            { label: t.profile.settingItems.videos, icon: '🎬' },
+            { label: t.profile.settingItems.album, icon: '🖼️' },
+            { label: t.profile.settingItems.system, icon: '⚙️' },
           ].map(s => (
             <GlassCard key={s.label} className="p-3 flex items-center gap-3">
               <span className="text-lg">{s.icon}</span>
