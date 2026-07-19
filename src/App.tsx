@@ -16,6 +16,9 @@ interface Achievement { id: string; title: string; icon: string; unlocked: boole
 interface GrowthData { week: string; distance: number; pace: number; heartRate: number }
 interface TrendData { month: string; distance: number; runs: number }
 interface HRZone { zone: string; range: string; percent: number; color: string }
+interface PartyMember { name: string; weeklyDist: number; avgPace: string }
+interface ScheduledRun { date: string; time: string; route: string }
+interface Party { name: string; members: PartyMember[]; scheduledRun?: ScheduledRun }
 
 // ─── Mock Data ────────────────────────────────────────────
 const weather: Weather = { temp: 22, condition: '多云', aqi: 42, aqiLevel: '优', humidity: 65, windSpeed: 12 }
@@ -83,6 +86,17 @@ const achievements: Achievement[] = [
   { id: 'a7', title: '月度200km', icon: '💪', unlocked: false },
   { id: 'a8', title: '完美一周', icon: '✨', unlocked: false },
 ]
+
+const party: Party = {
+  name: '晨跑小分队',
+  members: [
+    { name: '跑者', weeklyDist: 42.5, avgPace: '5:20' },
+    { name: '小明', weeklyDist: 35.2, avgPace: '5:45' },
+    { name: '小红', weeklyDist: 28.8, avgPace: '6:10' },
+    { name: '大壮', weeklyDist: 55.0, avgPace: '4:55' },
+  ],
+  scheduledRun: { date: '07/20', time: '06:30', route: '滨江公园 7.5km' },
+}
 
 // ─── Shared Components ────────────────────────────────────
 
@@ -351,6 +365,86 @@ function Home() {
             </GlassCard>
           ))}
         </div>
+
+        {/* Party / Team */}
+        <SectionH title={t.home.party} />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <GlassCard className="p-4 mb-5">
+            {/* Header: party name + member count */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-white text-[15px] font-semibold leading-tight">{party.name}</div>
+                  <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {party.members.length}</div>
+                </div>
+              </div>
+              <Badge color="#7c5cff">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+                {t.home.createParty}
+              </Badge>
+            </div>
+
+            {/* Members list */}
+            <div className="space-y-1.5 mb-3">
+              {party.members.map((m, i) => (
+                <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+                    {m.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-[13px] font-medium truncate">{m.name}</div>
+                    <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
+                    <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                {t.home.shareStats}
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {t.home.scheduleRun}
+              </motion.button>
+            </div>
+
+            {/* Scheduled run badge */}
+            {party.scheduledRun && (
+              <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-accent-orange/10 border border-accent-orange/20 px-3 py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-orange shrink-0"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <div className="flex-1 min-w-0">
+                  <div className="text-accent-orange text-[11px] font-semibold uppercase tracking-wide">{t.home.scheduledRun}</div>
+                  <div className="text-white text-[12px] font-medium mt-0.5 truncate">
+                    {party.scheduledRun.date} · {party.scheduledRun.time} · {t.routes[party.scheduledRun.route] ?? party.scheduledRun.route}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Invite hint */}
+            <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
+          </GlassCard>
+        </motion.div>
 
         {/* AI Suggestion */}
         <GlassCard className="p-4 mb-6">
