@@ -213,7 +213,7 @@ function Home() {
           </Badge>
           <Badge color="#4a9eff">
             <span className="w-1.5 h-1.5 rounded-full bg-accent-blue" />
-            {t.home.aqi}{weather.aqi} · {weather.aqiLevel}
+            {t.home.aqi}{weather.aqi} · {t.home.aqiLevels[weather.aqiLevel] ?? weather.aqiLevel}
           </Badge>
         </div>
 
@@ -222,7 +222,7 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-white text-[15px] font-semibold">{t.home.todayTraining}</div>
-              <div className="text-[#a0a0b8] text-[12px] mt-0.5">{todayPlan.title} · {todayPlan.distance}{t.units.km}</div>
+              <div className="text-[#a0a0b8] text-[12px] mt-0.5">{t.home.planTitles[todayPlan.title] ?? todayPlan.title} · {todayPlan.distance}{t.units.km}</div>
             </div>
             <div className="flex items-center gap-2 bg-neon/20 rounded-xl px-4 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><polyline points="12 6 12 12 16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -239,11 +239,11 @@ function Home() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <span className="text-white text-[15px] font-semibold">{todayPlan.title}</span>
+              <span className="text-white text-[15px] font-semibold">{t.home.planTitles[todayPlan.title] ?? todayPlan.title}</span>
             </div>
             <Badge color={todayPlan.intensity === 'easy' ? '#00ff88' : todayPlan.intensity === 'moderate' ? '#ffd60a' : '#ff6b35'}>{t.home.intensity[todayPlan.intensity as 'easy' | 'moderate' | 'hard']}</Badge>
           </div>
-          <p className="text-[#a0a0b8] text-[13px] leading-relaxed mb-3">{todayPlan.description}</p>
+          <p className="text-[#a0a0b8] text-[13px] leading-relaxed mb-3">{t.home.planDescriptions[todayPlan.description] ?? todayPlan.description}</p>
           <div className="stats-grid mb-3">
             {[
               { label: t.home.stats.distance, value: todayPlan.distance, unit: t.units.km },
@@ -265,7 +265,7 @@ function Home() {
                   {t.segments[seg.type as 'warmup' | 'run' | 'sprint' | 'cooldown']}
                 </div>
                 <div className="flex-1">
-                  <div className="text-white text-[13px] font-medium">{seg.note}</div>
+                  <div className="text-white text-[13px] font-medium">{t.home.segmentNotes[seg.note] ?? seg.note}</div>
                   <div className="text-[#6b6b8d] text-[11px]">{seg.duration}{t.units.min} · {seg.pace}{t.units.perKm}</div>
                 </div>
               </div>

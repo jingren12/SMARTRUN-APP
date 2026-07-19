@@ -37,6 +37,10 @@ export interface Translations {
     viewAll: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
+    planTitles: Record<string, string>;
+    planDescriptions: Record<string, string>;
+    segmentNotes: Record<string, string>;
+    aqiLevels: Record<string, string>;
   };
 
   // ─── Run Page ───
@@ -169,6 +173,15 @@ const zh: Translations = {
     viewAll: '查看全部',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
+      planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
+      planDescriptions: { '低心率有氧基础训练，保持心率区间2-3，注重跑步经济性': '低心率有氧基础训练，保持心率区间2-3，注重跑步经济性' },
+      segmentNotes: {
+        '慢跑热身，动态拉伸': '慢跑热身，动态拉伸',
+        '有氧巡航，心率145-160': '有氧巡航，心率145-160',
+        '3组200m短冲': '3组200m短冲',
+        '慢跑冷身，拉伸': '慢跑冷身，拉伸',
+      },
+      aqiLevels: { '优': '优' },
   },
   run: {
     followMode: '跟随模式',
@@ -299,6 +312,15 @@ const en: Translations = {
     viewAll: 'View All',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
+      planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },
+      planDescriptions: { '低心率有氧基础训练，保持心率区间2-3，注重跑步经济性': 'Low heart rate aerobic base training. Stay in zone 2-3, focus on running economy.' },
+      segmentNotes: {
+        '慢跑热身，动态拉伸': 'Jogging warm-up, dynamic stretches',
+        '有氧巡航，心率145-160': 'Aerobic cruise, HR 145-160',
+        '3组200m短冲': '3×200m sprints',
+        '慢跑冷身，拉伸': 'Jogging cool-down, stretching',
+      },
+      aqiLevels: { '优': 'Excellent' },
   },
   run: {
     followMode: 'Follow Mode',
