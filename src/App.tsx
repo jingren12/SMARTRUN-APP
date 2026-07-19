@@ -133,11 +133,11 @@ function GlassCard({ children, className = '', onClick }: { children: ReactNode;
   )
 }
 
-function SectionH({ title, action }: { title: string; action?: string }) {
+function SectionH({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
   return (
     <div className="flex items-center justify-between mb-3">
       <h2 className="text-white text-[17px] font-semibold tracking-tight">{title}</h2>
-      {action && <span className="text-neon text-[13px] font-medium">{action}</span>}
+      {action && <button onClick={onAction} className="text-neon text-[13px] font-medium">{action}</button>}
     </div>
   )
 }
@@ -197,6 +197,7 @@ function PageWrap({ tab, children }: { tab: Tab; children: ReactNode }) {
 function Home() {
   const t = useT()
   const streakDays = 18
+  const [showAllRuns, setShowAllRuns] = useState(false)
   const recoveryScore = 82
   const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
@@ -341,9 +342,9 @@ function Home() {
         </GlassCard>
 
         {/* Recent Runs */}
-        <SectionH title={t.home.recentRuns} action={t.home.viewAll} />
+        <SectionH title={t.home.recentRuns} action={showAllRuns ? t.home.viewLess : t.home.viewAll} onAction={() => setShowAllRuns(prev => !prev)} />
         <div className="space-y-2 mb-5">
-          {recentRuns.slice(0, 3).map(r => (
+          {(showAllRuns ? recentRuns : recentRuns.slice(0, 3)).map(r => (
             <GlassCard key={r.id} onClick={() => {}} className="p-3 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 21l3-7 4 2 3-6 3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -985,7 +986,7 @@ function Profile() {
 
         {/* Achievements */}
         <SectionH title={t.profile.achievements} action={t.home.viewAll} />
-        <div className="flex gap-2 overflow-x-auto scrollable pb-1 mb-5">
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-5">
           {achievements.map(a => (
             <div key={a.id} className={`shrink-0 w-20 rounded-2xl p-3 text-center ${a.unlocked ? 'bg-neon/10 border border-neon/20' : 'bg-[#1a1a2e]/40 border border-[#2a2a40]/30 opacity-50'}`}>
               <div className="text-2xl mb-1">{a.icon}</div>

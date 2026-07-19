@@ -35,6 +35,7 @@ export interface Translations {
     keepGoing: string;
     recentRuns: string;
     viewAll: string;
+    viewLess: string;
     party: string;
     createParty: string;
     partyMembers: string;
@@ -183,6 +184,7 @@ const zh: Translations = {
     keepGoing: '继续保持！',
     recentRuns: '最近训练',
     viewAll: '查看全部',
+    viewLess: '收起',
     party: '团队',
     createParty: '创建团队',
     partyMembers: '团队成员',
@@ -349,6 +351,7 @@ const en: Translations = {
     keepGoing: 'Keep going!',
     recentRuns: 'Recent Runs',
     viewAll: 'View All',
+    viewLess: 'Collapse',
     party: 'Team',
     createParty: 'Create Team',
     partyMembers: 'Members',
