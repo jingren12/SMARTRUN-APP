@@ -1,39 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SVG">
-  <title>SVG</title>
-  <desc>SVG file icon (maskable): document sheet with folded corner and Chrome-like tricolor ring, inset within safe area</desc>
-
-  <!-- Black outer canvas (full bleed for maskable) -->
-  <rect width="512" height="512" fill="#0a0a0a"/>
-
-  <!-- Document sheet: inset further to fit within 80% safe area -->
-  <!-- Safe area is 410x410 centered -> 51..461 on each axis -->
-  <g transform="translate(0 0) scale(0.84) translate(48.8 48.8)">
-    <path d="M 116 72
-             L 344 72
-             L 416 144
-             L 416 424
-             Q 416 440 400 440
-             L 116 440
-             Q 100 440 100 424
-             L 100 88
-             Q 100 72 116 72 Z"
-          fill="#f8f8fa"/>
-
-    <path d="M 344 72 L 416 144 L 344 144 Z" fill="#d0d0d6"/>
-    <path d="M 344 72 L 416 144" stroke="#a8a8b0" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-
-    <g transform="translate(256 220)">
-      <path d="M -88 0 A 88 88 0 0 1 88 0 L 36 0 A 36 36 0 0 0 -36 0 Z" fill="#ea4335"/>
-      <path d="M 88 0 A 88 88 0 0 1 0 88 L 0 36 A 36 36 0 0 0 36 0 Z" fill="#34a853"/>
-      <path d="M 0 88 A 88 88 0 0 1 -88 0 L -36 0 A 36 36 0 0 0 0 36 Z" fill="#fbbc05"/>
-      <circle cx="0" cy="0" r="36" fill="#ffffff"/>
-      <circle cx="0" cy="0" r="22" fill="#4285f4"/>
-    </g>
-
-    <text x="256" y="404" text-anchor="middle"
-          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-          font-size="58" font-weight="700"
-          fill="#6e6e78"
-          letter-spacing="2">SVG</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EOS">
+  <title>EOS</title>
+  <rect width="512" height="512" fill="#f7f4f0"/>
+  <g transform="translate(55 140) scale(.4)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M304 258H112a145 145 0 1 0 190 119" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M304 258H112a145 145 0 1 0 190 119" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M112 258a145 145 0 0 1 222-92" stroke="#ff4b16" stroke-width="58"/>
+    <path d="M112 258a145 145 0 0 1 222-92" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M304 377 438 184" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M304 377 438 184" stroke="#f7f4f0" stroke-width="16"/>
+    <ellipse cx="600" cy="258" rx="150" ry="145" stroke="#0b0b0b" stroke-width="58"/>
+    <ellipse cx="600" cy="258" rx="150" ry="145" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M735 258C760 258 772 221 796 205" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M735 258C760 258 772 221 796 205" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M760 185 830 258 760 331" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M760 185 830 258 760 331" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M796 311C816 333 828 346 850 348" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M796 311C816 333 828 346 850 348" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M1046 174c-22-24-58-35-104-35-59 0-94 23-94 61 0 37 31 51 96 66 71 16 104 38 104 78 0 42-40 68-106 68-50 0-91-14-116-42" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M1046 174c-22-24-58-35-104-35-59 0-94 23-94 61 0 37 31 51 96 66 71 16 104 38 104 78 0 42-40 68-106 68-50 0-91-14-116-42" stroke="#f7f4f0" stroke-width="16"/>
   </g>
 </svg>
