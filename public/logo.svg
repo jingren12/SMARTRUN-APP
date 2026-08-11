@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">EOS</title>
+  <desc id="desc">Evolve. Outrun. Shine.</desc>
+  <rect width="1200" height="520" rx="28" fill="#f7f4f0"/>
+  <g transform="translate(48 52) scale(2.18)">
+    <path fill="#111111" d="M80 132h126l-18 42h-72l-12 38h72l-16 41H91l-12 42h82l-18 43H25z"/>
+    <path fill="#111111" fill-rule="evenodd" d="M242 124c57 0 88 36 73 96l-12 45c-15 54-52 77-108 77h-27l18-52h20c22 0 36-9 42-30l14-48c6-22-2-36-24-36h-20l18-52zM214 177l-10 35h18c15 0 23-7 28-23l2-7c4-4 0-5-8-5z"/>
+    <path fill="#111111" d="M382 127c31 0 58 8 79 25l-34 43c-15-11-31-16-48-16-13 0-22 4-25 12-3 8 4 13 25 20 43 14 61 37 52 70-12 43-46 62-101 62-34 0-65-9-88-27l36-47c17 13 36 20 57 20 15 0 24-4 27-12 3-8-5-13-27-20-41-13-58-36-49-69 11-41 44-61 96-61z"/>
+  </g>
+  <path d="M91 178a130 130 0 0 1 250 34" fill="none" stroke="#ff4b16" stroke-width="28" stroke-linecap="round"/>
+  <g font-family="Inter, Arial, sans-serif" font-size="43" font-weight="700" letter-spacing="17">
+    <text x="190" y="420" fill="#ff4b16">E</text>
+    <text x="232" y="420" fill="#111111">volve.</text>
+    <text x="520" y="420" fill="#ff4b16">O</text>
+    <text x="573" y="420" fill="#111111">utrun.</text>
+    <text x="860" y="420" fill="#ff4b16">S</text>
+    <text x="912" y="420" fill="#111111">hine.</text>
+  </g>
+</svg>
