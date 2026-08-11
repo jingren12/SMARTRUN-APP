@@ -1,7 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EOS">
   <rect width="512" height="512" rx="112" fill="#f7f4f0"/>
-  <path fill="#111111" d="M80 132h126l-18 42h-72l-12 38h72l-16 41H91l-12 42h82l-18 43H25z"/>
-  <path fill="#111111" fill-rule="evenodd" d="M242 124c57 0 88 36 73 96l-12 45c-15 54-52 77-108 77h-27l18-52h20c22 0 36-9 42-30l14-48c6-22-2-36-24-36h-20l18-52zM214 177l-10 35h18c15 0 23-7 28-23l2-7c4-4 0-5-8-5z"/>
-  <path fill="#111111" d="M382 127c31 0 58 8 79 25l-34 43c-15-11-31-16-48-16-13 0-22 4-25 12-3 8 4 13 25 20 43 14 61 37 52 70-12 43-46 62-101 62-34 0-65-9-88-27l36-47c17 13 36 20 57 20 15 0 24-4 27-12 3-8-5-13-27-20-41-13-58-36-49-69 11-41 44-61 96-61z"/>
-  <path d="M53 188a111 111 0 0 1 209 27" fill="none" stroke="#ff4b16" stroke-width="24" stroke-linecap="round"/>
+  <g transform="translate(55 140) scale(.4)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M304 258H112a145 145 0 1 0 190 119" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M304 258H112a145 145 0 1 0 190 119" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M112 258a145 145 0 0 1 222-92" stroke="#ff4b16" stroke-width="58"/>
+    <path d="M112 258a145 145 0 0 1 222-92" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M304 377 438 184" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M304 377 438 184" stroke="#f7f4f0" stroke-width="16"/>
+    <ellipse cx="600" cy="258" rx="150" ry="145" stroke="#0b0b0b" stroke-width="58"/>
+    <ellipse cx="600" cy="258" rx="150" ry="145" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M735 258C760 258 772 221 796 205" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M735 258C760 258 772 221 796 205" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M760 185 830 258 760 331" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M760 185 830 258 760 331" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M796 311C816 333 828 346 850 348" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M796 311C816 333 828 346 850 348" stroke="#f7f4f0" stroke-width="16"/>
+    <path d="M1046 174c-22-24-58-35-104-35-59 0-94 23-94 61 0 37 31 51 96 66 71 16 104 38 104 78 0 42-40 68-106 68-50 0-91-14-116-42" stroke="#0b0b0b" stroke-width="58"/>
+    <path d="M1046 174c-22-24-58-35-104-35-59 0-94 23-94 61 0 37 31 51 96 66 71 16 104 38 104 78 0 42-40 68-106 68-50 0-91-14-116-42" stroke="#f7f4f0" stroke-width="16"/>
+  </g>
 </svg>
