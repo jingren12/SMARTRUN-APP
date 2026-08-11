@@ -158,6 +158,31 @@ Spacing follows a 4px base unit, with the current UI most frequently using 4px, 
 - **Motion**: keep tab changes transform/opacity based; avoid layout animation.
 - **Layout**: fixed shell layer; page content must reserve room for it.
 
+### AuthScreen
+
+- **Structure**: full-viewport sign-in surface rendered inside the 393px mobile shell before any authenticated UI. A centered glass panel contains the SmartRun wordmark, a short Chinese-language prompt, an email/identifier field, a password field, a primary submit button, and an inline error region. No `NavBar` is rendered until authentication succeeds.
+- **Variants**: sign-in (default); a toggle to a sign-up mode may be added later but is not part of the initial contract. Loading state on the submit button while a mock request is "in flight".
+- **Spacing**: panel padding 20px (`space-5`); field stack gap 12px (`space-3`); submit button top margin 16px (`space-4`); error text 8px (`space-2`) below the button. Panel is vertically centered with at least 24px (`space-6`) of safe-area-aware breathing room top and bottom.
+- **States**:
+  - Fields: default, focus, disabled (during loading), error (field-level border tint plus helper text).
+  - Submit button: default, hover, active press (scale 0.97), focus, loading (disabled with a neon-tinted spinner or label change), error (shake or inline error text, never color-only).
+  - Error region: empty when no error; visible error text appears below the form, never as a toast or color-only signal.
+- **Accessibility**:
+  - Use native `<label>`, `<input type="email">`, `<input type="password">`, and `<button type="submit">`. No custom div-based controls.
+  - Each label is programmatically associated with its input via `htmlFor`/`id`.
+  - Error text is exposed via `aria-describedby` linking the error element to the affected field, and `aria-invalid="true"` is set on the field when an error is present.
+  - Visible focus ring on every field and button using the existing focus treatment; do not rely on color alone.
+  - The form is keyboard-navigable in source order: email, password, submit. Enter submits the form.
+  - Error messages are written in Chinese, specific, and actionable (for example, "邮箱和密码不能为空" rather than a generic "失败").
+  - Respect `prefers-reduced-motion`: disable the error shake and any entry animation.
+- **Motion**:
+  - Panel entry: a single `slide-up` or opacity fade over 300-400ms with `cubic-bezier(0.16, 1, 0.3, 1)`, communicating content arrival.
+  - Button press: transform-only scale 0.97, 100-150ms ease-out.
+  - Error feedback: a short horizontal shake (transform-only, under 300ms) or a fade-in of the error text; no decorative motion.
+  - No ambient glow loop on this screen; neon is reserved for the focused field border and the primary submit button.
+- **Layout**: occupies the full mobile shell; the panel is centered both axes and never exceeds the 393px content width. On desktop the same shell framing (1px side borders, ambient neon frame) applies. No `NavBar`, no tab bar, no bottom navigation is rendered before authentication succeeds.
+- **Tokens**: reuse existing tokens only. Panel surface `smartrun-600` with the standard glass treatment; borders `border`/`border-light`; text `text-primary` and `text-secondary`; primary submit button uses `neon` accent with `neon-glow` on focus; error text and error border use `accent-red`. No new color tokens are introduced by this screen.
+
 ## 6. Motion & Interaction
 
 ### Timing
@@ -212,3 +237,7 @@ SmartRun uses a **mixed** strategy led by translucent tonal-shift surfaces, with
 | `body` disables scrolling and selection globally | `src/index.css` | Current app is a controlled mobile shell prototype | Revisit when text selection, desktop layouts, or PWA browser behavior requires it |
 | Font loading depends on Google Fonts | `index.html` | Existing visual identity uses Inter and JetBrains Mono | Add a self-hosted/offline strategy when PWA offline requirements are implemented |
 | Reduced-motion overrides are not yet centralized | `src/index.css`, `src/App.tsx` | Existing motion predates the design-system extraction | Add a shared reduced-motion policy before expanding animated surfaces |
+| AuthScreen uses `localStorage` for session persistence | `src/App.tsx` (planned) | Frontend-only mock authentication for the prototype; no server, no token refresh, no revocation | Replace with a real auth provider (OAuth/OIDC or backend session) before any production or multi-user deployment. `localStorage` is readable by any script on the origin and must not store real credentials or bearer tokens in production |
+| AuthScreen password "hashing" is a mock-only transform | `src/App.tsx` (planned) | Prototype-only obfuscation so the UI can demonstrate the sign-in flow without a backend | Replace with a server-side password hash (Argon2/bcrypt) and never ship mock hashing as if it were security. The mock is explicitly not a security control |
+| AuthScreen has no rate limiting, lockout, or CSRF protection | `src/App.tsx` (planned) | No backend exists in the prototype; these controls are server-side by nature | Add server-side rate limiting, lockout, and CSRF protection together with the real auth provider. The frontend cannot enforce these |
+| AuthScreen credentials are checked against a mock user list in code | `src/data/mockData.ts` or `src/App.tsx` (planned) | Prototype needs a deterministic demo login to show the post-auth experience | Remove the mock user list and replace with real credential verification when the backend lands. Hardcoded demo credentials must not appear in production builds |
