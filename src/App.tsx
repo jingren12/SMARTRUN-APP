@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   CartesianGrid } from 'recharts'
@@ -6,6 +6,12 @@ import { useT, useLang } from './i18n/context'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
+
+// Non-standard Chromium event for the install prompt — not in lib.dom
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
 
 interface Weather { temp: number; condition: string; aqi: number; aqiLevel: string; humidity: number; windSpeed: number }
 interface PlanSegment { type: string; duration: number; pace: string; note: string }
@@ -929,6 +935,37 @@ function RobotPage() {
 function Profile() {
   const t = useT()
   const { lang, setLang } = useLang()
+  const [installEvt, setInstallEvt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(false)
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as { standalone?: boolean }).standalone === true
+    if (standalone) {
+      setInstalled(true)
+      return
+    }
+    const onBip = (e: Event) => {
+      e.preventDefault()
+      setInstallEvt(e as BeforeInstallPromptEvent)
+    }
+    const onInstalled = () => setInstalled(true)
+    window.addEventListener('beforeinstallprompt', onBip)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBip)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
+  }, [])
+
+  const handleInstall = async () => {
+    if (!installEvt) return
+    await installEvt.prompt()
+    const choice = await installEvt.userChoice
+    if (choice.outcome === 'accepted') setInstalled(true)
+    setInstallEvt(null)
+  }
   return (
     <div className="h-full flex flex-col">
       <StatusBar />
@@ -1036,6 +1073,24 @@ function Profile() {
               </button>
             </div>
           </GlassCard>
+          {installEvt && !installed && (
+            <GlassCard className="p-3 flex items-center gap-3 mb-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon shrink-0"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              <div className="flex-1 min-w-0">
+                <div className="text-white text-[13px] font-medium">{t.profile.installApp}</div>
+                <div className="text-[#6b6b8d] text-[11px] truncate">{t.profile.installHint}</div>
+              </div>
+              <button onClick={handleInstall} className="px-3 py-1.5 rounded-lg bg-neon text-[#0a0a0f] text-[12px] font-semibold active:scale-95 transition-transform">
+                {t.profile.installApp}
+              </button>
+            </GlassCard>
+          )}
+          {installed && (
+            <GlassCard className="p-3 flex items-center gap-3 mb-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon shrink-0"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span className="flex-1 text-white text-[13px] font-medium">{t.profile.installed}</span>
+            </GlassCard>
+          )}
           {[
             { label: t.profile.settingItems.friends, icon: '👥' },
             { label: t.profile.settingItems.membership, icon: '⭐' },

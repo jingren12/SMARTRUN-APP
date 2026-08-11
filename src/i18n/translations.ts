@@ -129,6 +129,10 @@ export interface Translations {
     language: string;
     langZh: string;
     langEn: string;
+    // PWA install
+    installApp: string;
+    installHint: string;
+    installed: string;
     achievementTitles: Record<string, string>;
   };
 
@@ -293,6 +297,9 @@ const zh: Translations = {
     language: '语言',
     langZh: '中文',
     langEn: 'English',
+    installApp: '安装应用',
+    installHint: '添加到主屏幕，随时开始跑步',
+    installed: '已安装',
     achievementTitles: {
       '初出茅庐': '初出茅庐',
       '百公里俱乐部': '百公里俱乐部',
@@ -463,6 +470,9 @@ const en: Translations = {
      language: 'Language',
      langZh: '中文',
     langEn: 'English',
+    installApp: 'Install App',
+    installHint: 'Add to home screen and start running anytime',
+    installed: 'Installed',
     achievementTitles: {
       '初出茅庐': 'First Steps',
       '百公里俱乐部': '100km Club',
