@@ -1,24 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a1a2e"/>
-      <stop offset="1" stop-color="#0a0a0f"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#00ff88" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#00ff88" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <!-- full-bleed background for maskable safe zone -->
-  <rect width="512" height="512" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="196" fill="url(#glow)"/>
-  <g transform="translate(256 256) scale(0.62) translate(-256 -256)">
-    <circle cx="256" cy="256" r="150" fill="none" stroke="#00ff88" stroke-width="30" stroke-linecap="round"
-            stroke-dasharray="628.3 942.5" stroke-dashoffset="0"
-            transform="rotate(-150 256 256)"/>
-    <circle cx="256" cy="256" r="150" fill="none" stroke="#3a3a5c" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"
-            transform="rotate(-150 256 256)"/>
-    <circle cx="418" cy="194" r="22" fill="#66ffb2"/>
-    <circle cx="418" cy="194" r="34" fill="#00ff88" opacity="0.18"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EOS">
+  <rect width="512" height="512" fill="#f7f4f0"/>
+  <g transform="translate(256 256) scale(0.70) translate(-256 -256)">
+    <path fill="#111111" d="M80 132h126l-18 42h-72l-12 38h72l-16 41H91l-12 42h82l-18 43H25z"/>
+    <path fill="#111111" fill-rule="evenodd" d="M242 124c57 0 88 36 73 96l-12 45c-15 54-52 77-108 77h-27l18-52h20c22 0 36-9 42-30l14-48c6-22-2-36-24-36h-20l18-52zM214 177l-10 35h18c15 0 23-7 28-23l2-7c4-4 0-5-8-5z"/>
+    <path fill="#111111" d="M382 127c31 0 58 8 79 25l-34 43c-15-11-31-16-48-16-13 0-22 4-25 12-3 8 4 13 25 20 43 14 61 37 52 70-12 43-46 62-101 62-34 0-65-9-88-27l36-47c17 13 36 20 57 20 15 0 24-4 27-12 3-8-5-13-27-20-41-13-58-36-49-69 11-41 44-61 96-61z"/>
+    <path d="M53 188a111 111 0 0 1 209 27" fill="none" stroke="#ff4b16" stroke-width="24" stroke-linecap="round"/>
   </g>
 </svg>
