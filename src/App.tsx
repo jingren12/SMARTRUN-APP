@@ -220,7 +220,7 @@ function Home() {
           </div>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
             <div className="w-24 h-12 rounded-xl overflow-hidden border border-white/10 bg-[#f7f4f0]">
-              <img src="/logo.svg" alt="EOS - Evolve. Outrun. Shine." className="w-full h-full object-cover" />
+              <img src="/logo.png" alt="EOS - Evolve. Outrun. Shine." className="w-full h-full object-cover" />
             </div>
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon rounded-full border-2 border-[#0a0a0f] pulse-glow" />
           </motion.div>
