@@ -1,6 +1,6 @@
 {
-  "name": "SmartRun - AI Running Companion",
-  "short_name": "SmartRun",
+  "name": "eos",
+  "short_name": "eos",
   "description": "跑步陪伴应用：AI 教练、训练数据分析与机器人控制",
   "id": "/",
   "start_url": "/",
