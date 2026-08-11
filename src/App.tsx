@@ -219,10 +219,10 @@ function Home() {
             <p className="text-[13px] text-[#a0a0b8] mt-0.5">{t.home.readyQuestion}</p>
           </div>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-[#0a0a0a]">
-              <img src="/icon.svg" alt="SVG" className="w-full h-full object-cover" />
+            <div className="w-24 h-12 rounded-xl overflow-hidden border border-white/10 bg-[#f7f4f0]">
+              <img src="/logo.svg" alt="EOS - Evolve. Outrun. Shine." className="w-full h-full object-cover" />
             </div>
-            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-neon rounded-full border-2 border-[#0a0a0f] pulse-glow" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon rounded-full border-2 border-[#0a0a0f] pulse-glow" />
           </motion.div>
         </div>
 
