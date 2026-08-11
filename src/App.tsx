@@ -1,8 +1,10 @@
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
+import type { AuthMode, AuthErrorCode, AuthSession } from './data/types'
+import { getSession, signIn, signUp, signOut } from './auth/localAuth'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -932,7 +934,7 @@ function RobotPage() {
 
 // ─── Page: Profile ────────────────────────────────────────
 
-function Profile() {
+function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => void }) {
   const t = useT()
   const { lang, setLang } = useLang()
   const [installEvt, setInstallEvt] = useState<BeforeInstallPromptEvent | null>(null)
@@ -977,10 +979,10 @@ function Profile() {
           </motion.div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-white text-[22px] font-bold tracking-tight">{t.profile.name}</h1>
+              <h1 className="text-white text-[22px] font-bold tracking-tight">{session.displayName}</h1>
               <Badge color="#ffd60a">{t.profile.plusMember}</Badge>
             </div>
-            <p className="text-[#a0a0b8] text-[13px] mt-0.5">{t.profile.levelTitle(12, '白银跑者')} · Lv.12</p>
+            <p className="text-[#a0a0b8] text-[13px] mt-0.5">{session.email}</p>
           </div>
         </div>
 
@@ -1104,7 +1106,199 @@ function Profile() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#4a4a6a]"><polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2"/></svg>
             </GlassCard>
           ))}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.97 }}
+            onClick={onLogout}
+            className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-accent-red/10 border border-accent-red/30 text-accent-red py-3 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-accent-red/40"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-red" aria-hidden="true">
+              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M10 17l-5-5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            {t.profile.logout}
+          </motion.button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Auth Screen ───────────────────────────────────────────
+
+function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) {
+  const t = useT()
+  const { lang, setLang } = useLang()
+  const [mode, setMode] = useState<AuthMode>('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null)
+
+  const errorMsg = errorCode === null ? null : t.auth.errors[errorCode]
+  const errorId = 'auth-error'
+  const emailId = 'auth-email'
+  const passwordId = 'auth-password'
+  const nameId = 'auth-name'
+  const isSignup = mode === 'signup'
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const result = isSignup
+      ? signUp(email, password, displayName)
+      : signIn(email, password)
+    if (!result.ok) {
+      setErrorCode(result.error)
+      return
+    }
+    setErrorCode(null)
+    onAuthed(result.value)
+  }
+
+  const switchMode = (next: AuthMode) => {
+    setMode(next)
+    setPassword('')
+    setErrorCode(null)
+  }
+
+  return (
+    <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
+      <div className="absolute inset-0 flex items-center justify-center px-5 py-6">
+        <motion.form
+          onSubmit={handleSubmit}
+          noValidate
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[360px] glass rounded-3xl p-5"
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div className="w-12 h-9 rounded-lg overflow-hidden border border-white/10 bg-[#f7f4f0] shrink-0">
+              <img src="/logo.png" alt="SmartRun" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setLang('zh')}
+                aria-pressed={lang === 'zh'}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${lang === 'zh' ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#a0a0b8]'}`}
+              >
+                {t.profile.langZh}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('en')}
+                aria-pressed={lang === 'en'}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${lang === 'en' ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#a0a0b8]'}`}
+              >
+                {t.profile.langEn}
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <div className="text-white text-[22px] font-bold tracking-tight">{t.auth.brandTitle}</div>
+            <div className="text-[#a0a0b8] text-[12px] mt-1">{t.auth.brandSubtitle}</div>
+          </div>
+
+          <div className="flex gap-1 mb-4 bg-[#252540]/50 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={() => switchMode('signin')}
+              aria-pressed={mode === 'signin'}
+              className={`flex-1 rounded-lg py-2 text-[12px] font-semibold transition-all ${mode === 'signin' ? 'bg-neon/20 text-neon' : 'text-[#a0a0b8]'}`}
+            >
+              {t.auth.signIn}
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode('signup')}
+              aria-pressed={mode === 'signup'}
+              className={`flex-1 rounded-lg py-2 text-[12px] font-semibold transition-all ${mode === 'signup' ? 'bg-neon/20 text-neon' : 'text-[#a0a0b8]'}`}
+            >
+              {t.auth.signUp}
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {isSignup && (
+              <div>
+                <label htmlFor={nameId} className="block text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-1.5">
+                  {t.auth.fields.name}
+                </label>
+                <input
+                  id={nameId}
+                  type="text"
+                  autoComplete="name"
+                  value={displayName}
+                  onChange={(e) => { setDisplayName(e.target.value); setErrorCode(null) }}
+                  aria-invalid={errorCode === 'invalid_display_name'}
+                  aria-describedby={errorCode === 'invalid_display_name' ? errorId : undefined}
+                  placeholder={t.auth.placeholders.name}
+                  className="w-full bg-[#252540]/50 border border-[#2a2a40] rounded-xl px-4 py-2.5 text-white text-[13px] outline-none placeholder:text-[#4a4a6a] focus:border-neon/50 focus:ring-2 focus:ring-neon/20"
+                />
+              </div>
+            )}
+            <div>
+              <label htmlFor={emailId} className="block text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-1.5">
+                {t.auth.fields.email}
+              </label>
+              <input
+                id={emailId}
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setErrorCode(null) }}
+                aria-invalid={errorCode === 'invalid_email' || errorCode === 'email_taken' || errorCode === 'invalid_credentials'}
+                aria-describedby={errorCode === 'invalid_email' || errorCode === 'email_taken' || errorCode === 'invalid_credentials' ? errorId : undefined}
+                placeholder={t.auth.placeholders.email}
+                className="w-full bg-[#252540]/50 border border-[#2a2a40] rounded-xl px-4 py-2.5 text-white text-[13px] outline-none placeholder:text-[#4a4a6a] focus:border-neon/50 focus:ring-2 focus:ring-neon/20"
+              />
+            </div>
+            <div>
+              <label htmlFor={passwordId} className="block text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-1.5">
+                {t.auth.fields.password}
+              </label>
+              <input
+                id={passwordId}
+                type="password"
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrorCode(null) }}
+                aria-invalid={errorCode === 'invalid_password' || errorCode === 'invalid_credentials'}
+                aria-describedby={errorCode === 'invalid_password' || errorCode === 'invalid_credentials' ? errorId : undefined}
+                placeholder={t.auth.placeholders.password}
+                className="w-full bg-[#252540]/50 border border-[#2a2a40] rounded-xl px-4 py-2.5 text-white text-[13px] outline-none placeholder:text-[#4a4a6a] focus:border-neon/50 focus:ring-2 focus:ring-neon/20"
+              />
+            </div>
+          </div>
+
+          <motion.button
+            type="submit"
+            whileTap={{ scale: 0.97 }}
+            className="w-full mt-4 py-3 rounded-xl bg-neon text-[#0a0a0f] font-bold text-[15px] tracking-tight focus:outline-none focus:ring-2 focus:ring-neon/40"
+          >
+            {isSignup ? t.auth.submit.signUp : t.auth.submit.signIn}
+          </motion.button>
+
+          <div
+            id={errorId}
+            role="alert"
+            aria-live="polite"
+            className={`mt-2 text-[12px] ${errorMsg === undefined || errorMsg === null ? 'invisible' : 'text-accent-red'}`}
+          >
+            {errorMsg ?? ' '}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
+            className="w-full mt-3 text-[#a0a0b8] text-[12px] hover:text-neon transition-colors"
+          >
+            {isSignup ? t.auth.switch.toSignIn : t.auth.switch.toSignUp}
+          </button>
+        </motion.form>
       </div>
     </div>
   )
@@ -1113,8 +1307,19 @@ function Profile() {
 // ─── Main App ──────────────────────────────────────────────
 
 export default function App() {
+  const [session, setSession] = useState<AuthSession | null>(() => getSession())
   const [tab, setTab] = useState<Tab>('home')
   const inRun = false
+
+  const handleLogout = () => {
+    signOut()
+    setSession(null)
+    setTab('home')
+  }
+
+  if (session === null) {
+    return <AuthScreen onAuthed={setSession} />
+  }
 
   return (
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
@@ -1123,7 +1328,7 @@ export default function App() {
         {tab === 'run' && <RunPage />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}
-        {tab === 'profile' && <Profile />}
+        {tab === 'profile' && <Profile session={session} onLogout={handleLogout} />}
       </PageWrap>
       <NavBar active={tab} onChange={setTab} hidden={inRun} />
     </div>
