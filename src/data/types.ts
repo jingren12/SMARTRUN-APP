@@ -129,3 +129,38 @@ export interface RoutePoint {
   lat: number;
   lng: number;
 }
+
+export type AuthMode = 'signin' | 'signup';
+
+export interface AuthAccount {
+  readonly id: string;
+  readonly email: string;
+  readonly displayName: string;
+  readonly passwordHash: string;
+  readonly createdAt: string;
+}
+
+export interface AuthSession {
+  readonly userId: string;
+  readonly email: string;
+  readonly displayName: string;
+  readonly signedInAt: string;
+}
+
+export interface AuthStoreV1 {
+  readonly version: 1;
+  readonly accounts: readonly AuthAccount[];
+  session: AuthSession | null;
+}
+
+export type AuthErrorCode =
+  | 'invalid_email'
+  | 'invalid_password'
+  | 'invalid_display_name'
+  | 'email_taken'
+  | 'invalid_credentials'
+  | 'storage_unavailable';
+
+export type AuthResult<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: AuthErrorCode };
