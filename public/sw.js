@@ -3,11 +3,14 @@
  * everything with cache fallback — the app is mock-data only, so fresh
  * content wins when online and the cached shell keeps it usable offline.
  */
-const CACHE = 'smartrun-v1'
+const CACHE = 'smartrun-v2'
 const PRECACHE = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
+  '/logo.svg',
+  '/icon.svg',
+  '/icon-maskable.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-192.png',
