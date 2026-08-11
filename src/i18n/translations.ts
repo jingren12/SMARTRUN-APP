@@ -1,4 +1,5 @@
 export type Lang = 'zh' | 'en';
+import type { AuthErrorCode } from '../data/types';
 
 export interface Translations {
   // ─── Navigation ───
@@ -8,6 +9,19 @@ export interface Translations {
     aicoach: string;
     robot: string;
     profile: string;
+  };
+
+  // ─── Auth ───
+  auth: {
+    brandTitle: string;
+    brandSubtitle: string;
+    signIn: string;
+    signUp: string;
+    fields: { email: string; password: string; confirmPassword: string; name: string };
+    placeholders: { email: string; password: string; confirmPassword: string; name: string };
+    submit: { signIn: string; signUp: string };
+    switch: { toSignUp: string; toSignIn: string };
+    errors: Record<AuthErrorCode, string>;
   };
 
   // ─── Home Page ───
@@ -133,6 +147,8 @@ export interface Translations {
     installApp: string;
     installHint: string;
     installed: string;
+    logout: string;
+    accountEmail: string;
     achievementTitles: Record<string, string>;
   };
 
@@ -163,6 +179,24 @@ const zh: Translations = {
     aicoach: 'AI教练',
     robot: '机器人',
     profile: '我的',
+  },
+  auth: {
+    brandTitle: 'SmartRun',
+    brandSubtitle: '你的智能跑步伙伴',
+    signIn: '登录',
+    signUp: '注册',
+    fields: { email: '邮箱', password: '密码', confirmPassword: '确认密码', name: '昵称' },
+    placeholders: { email: '请输入邮箱', password: '请输入密码', confirmPassword: '请再次输入密码', name: '请输入昵称' },
+    submit: { signIn: '登录', signUp: '注册' },
+    switch: { toSignUp: '还没有账号？立即注册', toSignIn: '已有账号？去登录' },
+    errors: {
+      invalid_email: '邮箱格式不正确',
+      invalid_password: '密码至少需要 6 位',
+      invalid_display_name: '请输入 1-20 个字符的昵称',
+      email_taken: '该邮箱已被注册',
+      invalid_credentials: '邮箱或密码错误',
+      storage_unavailable: '暂时无法保存账户，请稍后重试',
+    },
   },
   home: {
     greeting: '早安, 跑者',
@@ -300,6 +334,8 @@ const zh: Translations = {
     installApp: '安装应用',
     installHint: '添加到主屏幕，随时开始跑步',
     installed: '已安装',
+    logout: '退出登录',
+    accountEmail: '账号邮箱',
     achievementTitles: {
       '初出茅庐': '初出茅庐',
       '百公里俱乐部': '百公里俱乐部',
@@ -333,6 +369,24 @@ const en: Translations = {
     aicoach: 'AI Coach',
     robot: 'Robot',
     profile: 'Profile',
+  },
+  auth: {
+    brandTitle: 'SmartRun',
+    brandSubtitle: 'Your Smart Running Companion',
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    fields: { email: 'Email', password: 'Password', confirmPassword: 'Confirm Password', name: 'Name' },
+    placeholders: { email: 'Enter your email', password: 'Enter your password', confirmPassword: 'Re-enter your password', name: 'Enter your name' },
+    submit: { signIn: 'Sign In', signUp: 'Sign Up' },
+    switch: { toSignUp: 'No account yet? Sign up', toSignIn: 'Already have an account? Sign in' },
+    errors: {
+      invalid_email: 'Enter a valid email address',
+      invalid_password: 'Password must be at least 6 characters',
+      invalid_display_name: 'Use a display name between 1 and 20 characters',
+      email_taken: 'This email is already registered',
+      invalid_credentials: 'Invalid email or password',
+      storage_unavailable: 'Unable to save the account right now',
+    },
   },
   home: {
     greeting: 'Good Morning, Runner',
@@ -473,6 +527,8 @@ const en: Translations = {
     installApp: 'Install App',
     installHint: 'Add to home screen and start running anytime',
     installed: 'Installed',
+    logout: 'Log Out',
+    accountEmail: 'Account Email',
     achievementTitles: {
       '初出茅庐': 'First Steps',
       '百公里俱乐部': '100km Club',
