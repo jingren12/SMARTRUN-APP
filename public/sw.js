@@ -3,19 +3,16 @@
  * everything with cache fallback — the app is mock-data only, so fresh
  * content wins when online and the cached shell keeps it usable offline.
  */
-const CACHE = 'smartrun-v3'
+const CACHE = 'smartrun-v4'
 const PRECACHE = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/logo.svg',
-  '/icon.svg',
-  '/icon-maskable.svg',
+  '/logo.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-192.png',
   '/icons/icon-maskable-512.png',
-  '/apple-touch-icon.png',
 ]
 
 self.addEventListener('install', (event) => {
