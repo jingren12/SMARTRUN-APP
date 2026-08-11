@@ -219,8 +219,8 @@ function Home() {
             <p className="text-[13px] text-[#a0a0b8] mt-0.5">{t.home.readyQuestion}</p>
           </div>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-neon/30 to-accent-blue/30 border border-neon/20 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_18px_rgba(255,75,22,0.16)]">
+              <img src="/icon.svg" alt="EOS" className="w-full h-full object-cover" />
             </div>
             <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-neon rounded-full border-2 border-[#0a0a0f] pulse-glow" />
           </motion.div>
