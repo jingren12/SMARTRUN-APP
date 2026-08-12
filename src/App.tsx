@@ -481,8 +481,8 @@ function RunPage({ session }: { session: AuthSession }) {
   const [xpFeedback, setXpFeedback] = useState<string | null>(null)
 
   const handleStart = () => {
-    const result = addXp(session.userId, 25)
-    setXpFeedback(t.run.xpGained(25, result.level))
+    const result = addXp(session.userId, 100)
+    setXpFeedback(t.run.xpGained(100, result.level))
     setActive(true)
     setTimeout(() => setXpFeedback(null), 3000)
   }
