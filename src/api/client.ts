@@ -1,7 +1,7 @@
 // ─── API Client ──────────────────────────────────────────────
 // Communicates with the Hono+SQLite backend at API_BASE
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export interface ApiAccount {
   id: string
