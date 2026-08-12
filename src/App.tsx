@@ -220,7 +220,15 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
       allNames.unshift(session.displayName)
     }
     if (customMemberName.trim()) {
-      allNames.push(customMemberName.trim())
+      const trimmed = customMemberName.trim()
+      const existingAccount = loadStore().accounts.find(
+        a => a.displayName.toLowerCase() === trimmed.toLowerCase() && a.id !== session.userId,
+      )
+      if (existingAccount && !selectedMembers.includes(existingAccount.displayName)) {
+        window.alert(`"${trimmed}" 已存在账号，请从可选成员中选择`)
+        return
+      }
+      allNames.push(trimmed)
     }
     const getStats = () => ({
       weeklyDist: Math.floor(Math.random() * 40 + 15),
