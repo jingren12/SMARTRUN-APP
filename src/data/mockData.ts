@@ -114,7 +114,7 @@ export const mockUserProfile: UserProfile = {
   equipment: [
     { name: 'Nike Vaporfly 3', type: 'shoes', distance: 320, image: '' },
     { name: 'Apple Watch Ultra 2', type: 'watch', image: '' },
-    { name: 'SmartRun X1', type: 'robot', distance: 320, image: '' },
+    { name: 'eos X1', type: 'robot', distance: 320, image: '' },
   ],
 };
 

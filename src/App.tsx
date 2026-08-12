@@ -1040,7 +1040,7 @@ function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => 
           {[
             { name: 'Nike Vaporfly 3', type: t.profile.equipmentItems['Nike Vaporfly 3'].type, dist: `320${t.units.km}`, icon: '👟' },
             { name: 'Apple Watch Ultra 2', type: t.profile.equipmentItems['Apple Watch Ultra 2'].type, icon: '⌚' },
-            { name: 'SmartRun X1', type: t.profile.equipmentItems['SmartRun X1'].type, dist: `320${t.units.km}`, icon: '🤖' },
+            { name: 'eos X1', type: t.profile.equipmentItems['eos X1'].type, dist: `320${t.units.km}`, icon: '🤖' },
           ].map(e => (
             <GlassCard key={e.name} className="p-3 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#252540]/50 flex items-center justify-center text-lg">{e.icon}</div>
@@ -1175,7 +1175,7 @@ function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) 
         >
           <div className="flex items-center justify-between mb-5">
             <div className="w-12 h-9 rounded-lg overflow-hidden border border-white/10 bg-[#f7f4f0] shrink-0">
-              <img src="/logo.png" alt="SmartRun" className="w-full h-full object-cover" />
+              <img src="/logo.png" alt="eos" className="w-full h-full object-cover" />
             </div>
             <div className="flex gap-1">
               <button

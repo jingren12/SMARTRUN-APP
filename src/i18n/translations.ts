@@ -181,7 +181,7 @@ const zh: Translations = {
     profile: '我的',
   },
   auth: {
-    brandTitle: 'SmartRun',
+    brandTitle: 'eos',
     brandSubtitle: '你的智能跑步伙伴',
     signIn: '登录',
     signUp: '注册',
@@ -287,7 +287,7 @@ const zh: Translations = {
     },
   },
   robot: {
-    title: 'SmartRun X1',
+    title: 'eos X1',
     firmware: '固件 ',
     connected: '已连接',
     labels: { distance: '距离', speed: '速度', temperature: '温度', storage: '存储' },
@@ -326,7 +326,7 @@ const zh: Translations = {
     equipmentItems: {
       'Nike Vaporfly 3': { type: '跑鞋' },
       'Apple Watch Ultra 2': { type: '手表' },
-      'SmartRun X1': { type: '机器人' },
+      'eos X1': { type: '机器人' },
     },
     language: '语言',
     langZh: '中文',
@@ -371,7 +371,7 @@ const en: Translations = {
     profile: 'Profile',
   },
   auth: {
-    brandTitle: 'SmartRun',
+    brandTitle: 'eos',
     brandSubtitle: 'Your Smart Running Companion',
     signIn: 'Sign In',
     signUp: 'Sign Up',
@@ -477,7 +477,7 @@ const en: Translations = {
     },
   },
   robot: {
-    title: 'SmartRun X1',
+    title: 'eos X1',
     firmware: 'Firmware ',
     connected: 'Connected',
     labels: { distance: 'Distance', speed: 'Speed', temperature: 'Temp', storage: 'Storage' },
@@ -519,7 +519,7 @@ const en: Translations = {
     equipmentItems: {
       'Nike Vaporfly 3': { type: 'Running Shoes' },
       'Apple Watch Ultra 2': { type: 'Watch' },
-       'SmartRun X1': { type: 'Robot' },
+       'eos X1': { type: 'Robot' },
      },
      language: 'Language',
      langZh: '中文',
