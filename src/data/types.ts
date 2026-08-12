@@ -160,7 +160,8 @@ export type AuthErrorCode =
   | 'email_taken'
   | 'invalid_credentials'
   | 'display_name_taken'
-  | 'storage_unavailable';
+  | 'storage_unavailable'
+  | 'network_error';
 
 export type AuthResult<T> =
   | { readonly ok: true; readonly value: T }

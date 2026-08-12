@@ -1,18 +1,19 @@
-import { useState, useEffect, type ReactNode, type FormEvent } from 'react'
+import { useState, useEffect, useCallback, type ReactNode, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
-import type { AuthMode, AuthErrorCode, AuthSession } from './data/types'
-import { getSession, signIn, signUp, signOut, loadStore } from './auth/localAuth'
+import type { AuthMode, AuthErrorCode } from './data/types'
+import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam } from './api/client'
+import type { ApiAccount, ApiInvite } from './api/client'
+import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
-import { loadTeam, saveTeam } from './team/team'
-import type { TeamData, TeamMember } from './team/team'
-import type { TeamInvite } from './invite/invite'
-import { loadInvites, saveInvites, sendInvite, removeInvite } from './invite/invite'
+import type { TeamData } from './team/team'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
+
+type Session = { id: string; email: string; displayName: string }
 
 // Non-standard Chromium event for the install prompt — not in lib.dom
 interface BeforeInstallPromptEvent extends Event {
@@ -193,27 +194,48 @@ function PageWrap({ tab, children }: { tab: Tab; children: ReactNode }) {
 
 // ─── Page: Home ────────────────────────────────────────────
 
-function Home({ session, onStartTraining }: { session: AuthSession; onStartTraining?: () => void }) {
+function Home({ session, token, onStartTraining }: { session: Session; token: string; onStartTraining?: () => void }) {
   const t = useT()
   const streakDays = 18
   const [showAllRuns, setShowAllRuns] = useState(false)
   const recoveryScore = 82
   const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
-  const [team, setTeam] = useState<TeamData | null>(() => loadTeam(session.userId))
-  const [invites, setInvites] = useState<TeamInvite[]>(() => loadInvites(session.userId))
+  const [team, setTeam] = useState<TeamData | null>(null)
+  const [teamLoading, setTeamLoading] = useState(true)
+  const [invites, setInvites] = useState<ApiInvite[]>([])
   const [showSentFeedback, setShowSentFeedback] = useState(false)
   const [inviteError, setInviteError] = useState('')
 
-  const refreshInvites = () => setInvites(loadInvites(session.userId))
+  const refreshInvites = useCallback(() => {
+    apiGetInvites(token).then(r => {
+      if (r.ok) setInvites(r.data.invites)
+    })
+  }, [token])
+
+  useEffect(() => {
+    setTeamLoading(true)
+    apiGetTeam(token).then(r => {
+      if (r.ok && r.data.team) setTeam(r.data.team as unknown as TeamData)
+      setTeamLoading(false)
+    }).catch(() => setTeamLoading(false))
+  }, [token])
+
+  useEffect(() => { refreshInvites() }, [refreshInvites])
 
   const [creating, setCreating] = useState(false)
   const [teamName, setTeamName] = useState('')
   const [customMemberName, setCustomMemberName] = useState('')
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
-  const otherAccounts = loadStore().accounts.filter(a => a.id !== session.userId)
+  const [otherAccounts, setOtherAccounts] = useState<ApiAccount[]>([])
 
-  const handleCreateTeam = () => {
+  useEffect(() => {
+    apiGetAccounts(token).then(r => {
+      if (r.ok) setOtherAccounts(r.data.accounts.filter(a => a.id !== session.id))
+    })
+  }, [token, session.id])
+
+  const handleCreateTeam = async () => {
     if (!teamName.trim()) return
     if (selectedMembers.length === 0 && !customMemberName.trim()) return
     const allNames = [...selectedMembers]
@@ -222,106 +244,52 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
     }
     if (customMemberName.trim()) {
       const trimmed = customMemberName.trim()
-      const exists = loadStore().accounts.some(
-        a => a.displayName.toLowerCase() === trimmed.toLowerCase() && a.id !== session.userId,
-      )
+      const exists = otherAccounts.some(a => a.displayName.toLowerCase() === trimmed.toLowerCase())
       if (!exists) {
         setInviteError(`"${trimmed}" 不存在，无法邀请`)
         return
       }
       allNames.push(trimmed)
     }
-    const getStats = () => ({
-      weeklyDist: Math.floor(Math.random() * 40 + 15),
-      avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
-    })
-    const members: TeamMember[] = allNames.map(name => {
-      if (name === session.displayName) {
-        return { name, userId: session.userId, status: 'accepted', ...getStats() }
-      }
+    for (const name of allNames) {
+      if (name === session.displayName) continue
       const account = otherAccounts.find(a => a.displayName === name)
       if (account) {
-        return { name, userId: account.id, status: 'pending', ...getStats() }
-      }
-      return { name, status: 'accepted', ...getStats() }
-    })
-    const newTeam: TeamData = { name: teamName.trim(), members }
-    saveTeam(newTeam, session.userId)
-    // send invites to account-based pending members
-    for (const m of members) {
-      if (m.userId && m.userId !== session.userId) {
-        sendInvite(session.userId, session.displayName, m.userId, { name: newTeam.name, members })
+        const result = await apiSendInvite(token, account.id, teamName.trim())
+        if (!result.ok) {
+          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : '发送邀请失败')
+          return
+        }
       }
     }
-    setTeam(newTeam)
+    const teamResult = await apiGetTeam(token)
+    if (teamResult.ok && teamResult.data.team) {
+      setTeam(teamResult.data.team as unknown as TeamData)
+    }
+    refreshInvites()
     setShowSentFeedback(true)
-    window.setTimeout(() => setShowSentFeedback(false), 3000)
+    setTimeout(() => setShowSentFeedback(false), 3000)
     setCreating(false)
     setTeamName('')
     setSelectedMembers([])
     setCustomMemberName('')
   }
 
-  const handleDeleteTeam = () => {
-    if (!team) return
-    // clear invites sent from this user to all pending members
-    for (const m of team.members) {
-      if (m.userId && m.status !== 'accepted') {
-        const userInvites = loadInvites(m.userId).filter(inv => inv.fromUserId !== session.userId)
-        saveInvites(m.userId, userInvites)
-      }
-    }
-    // delete team from all accepted members' storage
-    const deleteIds = [
-      session.userId,
-      ...team.members
-        .filter(m => m.status === 'accepted' && m.userId)
-        .map(m => m.userId as string),
-    ]
-    for (const uid of [...new Set(deleteIds)]) {
-      saveTeam(null, uid)
-    }
+  const handleDeleteTeam = async () => {
+    await apiDisbandTeam(token)
     setTeam(null)
   }
 
-  const handleAcceptInvite = (invite: TeamInvite) => {
-    const members = invite.members.map(m => {
-      if (m.name === session.displayName || m.userId === session.userId) {
-        return { ...m, status: 'accepted' as const }
-      }
-      return m
-    })
-    const acceptedTeam: TeamData = { name: invite.teamName, members }
-    saveTeam(acceptedTeam, session.userId)
-    // also update creator's team (same localStorage, single-device)
-    const creatorTeam = loadTeam(invite.fromUserId)
-    if (creatorTeam) {
-      const updatedMembers = creatorTeam.members.map(m => {
-        if (m.name === session.displayName || m.userId === session.userId) {
-          return { ...m, status: 'accepted' as const }
-        }
-        return m
-      })
-      saveTeam({ ...creatorTeam, members: updatedMembers }, invite.fromUserId)
+  const handleAcceptInvite = async (invite: ApiInvite) => {
+    const result = await apiAcceptInvite(token, invite.id)
+    if (result.ok && result.data.team) {
+      setTeam(result.data.team as unknown as TeamData)
     }
-    removeInvite(session.userId, invite.id)
-    setTeam(acceptedTeam)
     refreshInvites()
   }
 
-  const handleDeclineInvite = (invite: TeamInvite) => {
-    removeInvite(session.userId, invite.id)
-    const creatorTeam = loadTeam(invite.fromUserId)
-    if (creatorTeam) {
-      const updatedMembers = creatorTeam.members.filter(
-        m => m.name !== session.displayName && m.userId !== session.userId
-      )
-      if (updatedMembers.length > 0) {
-        saveTeam({ ...creatorTeam, members: updatedMembers }, invite.fromUserId)
-      } else {
-        saveTeam(null, invite.fromUserId)
-      }
-    }
+  const handleDeclineInvite = async (invite: ApiInvite) => {
+    await apiDeclineInvite(token, invite.id)
     refreshInvites()
   }
 
@@ -650,10 +618,10 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-white text-[13px] font-medium truncate">{m.name}</span>
-                          {m.userId === session.userId && (
+                          {m.userId === session.id && (
                             <Badge color="#00ff88" className="!px-1.5 !py-0 text-[9px]">{t.home.captain}</Badge>
                           )}
-                          {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.userId)) && (
+                          {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.id)) && (
                             <Badge color="#ff6b35" className="!px-1.5 !py-0 text-[9px]">{t.home.pendingStatus}</Badge>
                           )}
                         </div>
@@ -688,6 +656,10 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                 {/* Invite hint */}
                 <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
               </>
+            ) : teamLoading ? (
+              <div className="text-center py-6">
+                <div className="text-[#6b6b8d] text-[12px]">…</div>
+              </div>
             ) : (
               <>
                 {/* ── No Team / Create CTA ── */}
@@ -739,13 +711,13 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
 
 // ─── Page: Run ────────────────────────────────────────────
 
-function RunPage({ session }: { session: AuthSession }) {
+function RunPage({ session }: { session: Session }) {
   const t = useT()
   const [active, setActive] = useState(false)
   const [xpFeedback, setXpFeedback] = useState<string | null>(null)
 
   const handleStart = () => {
-    const result = addXp(session.userId, 100)
+    const result = addXp(session.id, 100)
     setXpFeedback(t.run.xpGained(100, result.level))
     setActive(true)
     setTimeout(() => setXpFeedback(null), 3000)
@@ -1213,13 +1185,13 @@ function RobotPage() {
 
 // ─── Page: Profile ────────────────────────────────────────
 
-function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => void }) {
+function Profile({ session, onLogout }: { session: Session; onLogout: () => void }) {
   const t = useT()
   const { lang, setLang } = useLang()
   const [installEvt, setInstallEvt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
 
-  const progress = getProgress(session.userId)
+  const progress = getProgress(session.id)
   const levelInfo = calcLevelProgress(progress.xp)
 
   useEffect(() => {
@@ -1409,7 +1381,7 @@ function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => 
 
 // ─── Auth Screen ───────────────────────────────────────────
 
-function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) {
+function AuthScreen({ onAuthed }: { onAuthed: (token: string, account: Session) => void }) {
   const t = useT()
   const { lang, setLang } = useLang()
   const [mode, setMode] = useState<AuthMode>('signin')
@@ -1417,6 +1389,7 @@ function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) 
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [errorCode, setErrorCode] = useState<AuthErrorCode | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const errorMsg = errorCode === null ? null : t.auth.errors[errorCode]
   const errorId = 'auth-error'
@@ -1425,17 +1398,26 @@ function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) 
   const nameId = 'auth-name'
   const isSignup = mode === 'signup'
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const result = isSignup
-      ? signUp(email, password, displayName)
-      : signIn(email, password)
-    if (!result.ok) {
-      setErrorCode(result.error)
-      return
-    }
+    if (submitting) return
     setErrorCode(null)
-    onAuthed(result.value)
+    setSubmitting(true)
+    try {
+      const result = isSignup
+        ? await apiSignUp(email, password, displayName)
+        : await apiSignIn(email, password)
+      if (result.ok) {
+        saveSession(result.data.sessionToken, result.data.account)
+        onAuthed(result.data.sessionToken, result.data.account)
+      } else {
+        setErrorCode(result.error as AuthErrorCode)
+      }
+    } catch {
+      setErrorCode('network_error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const switchMode = (next: AuthMode) => {
@@ -1559,9 +1541,10 @@ function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) 
           <motion.button
             type="submit"
             whileTap={{ scale: 0.97 }}
-            className="w-full mt-4 py-3 rounded-xl bg-neon text-[#0a0a0f] font-bold text-[15px] tracking-tight focus:outline-none focus:ring-2 focus:ring-neon/40"
+            disabled={submitting}
+            className="w-full mt-4 py-3 rounded-xl bg-neon text-[#0a0a0f] font-bold text-[15px] tracking-tight focus:outline-none focus:ring-2 focus:ring-neon/40 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSignup ? t.auth.submit.signUp : t.auth.submit.signIn}
+            {submitting ? '…' : isSignup ? t.auth.submit.signUp : t.auth.submit.signIn}
           </motion.button>
 
           <div
@@ -1589,26 +1572,37 @@ function AuthScreen({ onAuthed }: { onAuthed: (session: AuthSession) => void }) 
 // ─── Main App ──────────────────────────────────────────────
 
 export default function App() {
-  const [session, setSession] = useState<AuthSession | null>(() => getSession())
+  const [session, setSession] = useState<Session | null>(() => {
+    const account = getAccount()
+    const t = getToken()
+    return t && account ? account : null
+  })
+  const [token, setToken] = useState<string | null>(() => getToken())
   const [tab, setTab] = useState<Tab>('home')
   const inRun = false
 
   const handleStartTraining = () => setTab('run')
 
+  const handleAuth = (newToken: string, account: Session) => {
+    setToken(newToken)
+    setSession(account)
+  }
+
   const handleLogout = () => {
-    signOut()
+    clearSession()
+    setToken(null)
     setSession(null)
     setTab('home')
   }
 
-  if (session === null) {
-    return <AuthScreen onAuthed={setSession} />
+  if (session === null || token === null) {
+    return <AuthScreen onAuthed={handleAuth} />
   }
 
   return (
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
       <PageWrap tab={tab}>
-        {tab === 'home' && <Home session={session} onStartTraining={handleStartTraining} />}
+        {tab === 'home' && <Home session={session} token={token} onStartTraining={handleStartTraining} />}
         {tab === 'run' && <RunPage session={session} />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}

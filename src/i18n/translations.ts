@@ -215,6 +215,7 @@ const zh: Translations = {
       display_name_taken: '该昵称已被使用',
       invalid_credentials: '邮箱或密码错误',
       storage_unavailable: '暂时无法保存账户，请稍后重试',
+      network_error: '网络连接失败，请检查网络后重试',
     },
   },
   home: {
@@ -427,6 +428,7 @@ const en: Translations = {
       display_name_taken: 'This display name is already taken',
       invalid_credentials: 'Invalid email or password',
       storage_unavailable: 'Unable to save the account right now',
+      network_error: 'Network connection failed, please check your connection and try again',
     },
   },
   home: {
