@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode, AuthSession } from './data/types'
 import { getSession, signIn, signUp, signOut } from './auth/localAuth'
+import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -474,9 +475,17 @@ function Home() {
 
 // ─── Page: Run ────────────────────────────────────────────
 
-function RunPage() {
+function RunPage({ session }: { session: AuthSession }) {
   const t = useT()
   const [active, setActive] = useState(false)
+  const [xpFeedback, setXpFeedback] = useState<string | null>(null)
+
+  const handleStart = () => {
+    const result = addXp(session.userId, 25)
+    setXpFeedback(t.run.xpGained(25, result.level))
+    setActive(true)
+    setTimeout(() => setXpFeedback(null), 3000)
+  }
 
   if (!active) {
     return (
@@ -547,7 +556,7 @@ function RunPage() {
           </GlassCard>
 
           {/* Start Button */}
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setActive(true)} className="w-full mb-8 py-4 rounded-2xl bg-neon text-black font-bold text-[17px] tracking-tight shadow-lg shadow-neon/20">
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleStart} className="w-full mb-8 py-4 rounded-2xl bg-neon text-black font-bold text-[17px] tracking-tight shadow-lg shadow-neon/20">
             {t.run.startTraining}
           </motion.button>
         </div>
@@ -558,6 +567,12 @@ function RunPage() {
   // ─── Active Run Mode ──────────────────────────────────────
   return (
     <div className="h-full bg-black flex flex-col">
+      {/* XP Toast */}
+      {xpFeedback && (
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="absolute top-16 left-0 right-0 z-20 flex justify-center pointer-events-none">
+          <div className="glass rounded-xl px-4 py-2 text-neon text-[13px] font-semibold shadow-lg">{xpFeedback}</div>
+        </motion.div>
+      )}
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2">
         <button onClick={() => setActive(false)} className="text-white/60 text-xs p-2">
@@ -940,6 +955,9 @@ function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => 
   const [installEvt, setInstallEvt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
 
+  const progress = getProgress(session.userId)
+  const levelInfo = calcLevelProgress(progress.xp)
+
   useEffect(() => {
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -989,26 +1007,26 @@ function Profile({ session, onLogout }: { session: AuthSession; onLogout: () => 
         {/* Level Progress */}
         <GlassCard className="p-4 mb-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white text-[13px] font-semibold">Lv.12 {t.profile.levelTitle(12, '白银跑者')}</span>
-            <span className="text-[#6b6b8d] text-[11px]">{t.profile.nextLevel(13)}</span>
+            <span className="text-white text-[13px] font-semibold">Lv.{progress.level} {t.profile.levelTitle(progress.level)}</span>
+            <span className="text-[#6b6b8d] text-[11px]">{t.profile.nextLevel(progress.level + 1)}</span>
           </div>
           <div className="h-2 rounded-full bg-[#2a2a40] overflow-hidden mb-1">
-            <motion.div initial={{ width: 0 }} animate={{ width: '68%' }} transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-neon to-accent-blue" />
+            <motion.div initial={{ width: 0 }} animate={{ width: `${levelInfo.pct}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-gradient-to-r from-neon to-accent-blue" />
           </div>
           <div className="flex items-center justify-between text-[10px] text-[#6b6b8d]">
             <span>{t.profile.levelProgress.zero}</span>
-            <span>{t.profile.levelProgress.goal}</span>
-            <span>486 {t.units.km}</span>
+            <span>{progress.xp} {t.profile.levelProgress.xp}</span>
+            <span>{t.profile.runsCount(progress.runCount)}</span>
           </div>
         </GlassCard>
 
         {/* Stats Grid */}
         <div className="stats-grid mb-5">
           {[
-            { label: t.profile.statLabels.totalDist, value: '486', unit: t.units.km, color: '#00ff88', icon: '🏃' },
-            { label: t.profile.statLabels.robotDist, value: '320', unit: t.units.km, color: '#4a9eff', icon: '🤖' },
-            { label: t.profile.statLabels.streak, value: '18', unit: t.units.days, color: '#ffd60a', icon: '🔥' },
-            { label: t.profile.statLabels.aiScore, value: '82', unit: t.home.outOf, color: '#accent-purple', icon: '🧠' },
+            { label: t.profile.statLabels.totalDist, value: '0', unit: t.units.km, color: '#00ff88', icon: '🏃' },
+            { label: t.profile.statLabels.robotDist, value: '0', unit: t.units.km, color: '#4a9eff', icon: '🤖' },
+            { label: t.profile.statLabels.streak, value: '0', unit: t.units.days, color: '#ffd60a', icon: '🔥' },
+            { label: t.profile.statLabels.aiScore, value: '0', unit: t.home.outOf, color: '#8b5cf6', icon: '🧠' },
           ].map(s => (
             <GlassCard key={s.label} className="p-3.5">
               <div className="flex items-center justify-between mb-1">
@@ -1325,7 +1343,7 @@ export default function App() {
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
       <PageWrap tab={tab}>
         {tab === 'home' && <Home />}
-        {tab === 'run' && <RunPage />}
+        {tab === 'run' && <RunPage session={session} />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}
         {tab === 'profile' && <Profile session={session} onLogout={handleLogout} />}
