@@ -203,6 +203,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
   const [team, setTeam] = useState<TeamData | null>(() => loadTeam(session.userId))
   const [invites, setInvites] = useState<TeamInvite[]>(() => loadInvites(session.userId))
   const [showSentFeedback, setShowSentFeedback] = useState(false)
+  const [inviteError, setInviteError] = useState('')
 
   const refreshInvites = () => setInvites(loadInvites(session.userId))
 
@@ -225,7 +226,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
         a => a.displayName.toLowerCase() === trimmed.toLowerCase() && a.id !== session.userId,
       )
       if (!exists) {
-        window.alert(`"${trimmed}" 不存在，无法邀请`)
+        setInviteError(`"${trimmed}" 不存在，无法邀请`)
         return
       }
       allNames.push(trimmed)
@@ -328,6 +329,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
     setSelectedMembers(prev =>
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     )
+    setInviteError('')
   }
 
   return (
@@ -550,7 +552,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                   <input
                     type="text"
                     value={teamName}
-                    onChange={e => setTeamName(e.target.value)}
+                    onChange={e => { setTeamName(e.target.value); setInviteError('') }}
                     placeholder={t.home.createTeamName ?? '团队名称'}
                     className="w-full rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2 text-white text-[13px] focus:outline-none focus:border-neon/50 placeholder-[#4a4a6a] mb-3"
                   />
@@ -585,7 +587,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                       <input
                         type="text"
                         value={customMemberName}
-                        onChange={e => setCustomMemberName(e.target.value)}
+                        onChange={e => { setCustomMemberName(e.target.value); setInviteError('') }}
                         placeholder={t.home.memberNamePlaceholder ?? '输入成员名称'}
                         className="flex-1 rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2 text-white text-[13px] focus:outline-none focus:border-neon/50 placeholder-[#4a4a6a]"
                       />
@@ -601,6 +603,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                         setTeamName('')
                         setSelectedMembers([])
                         setCustomMemberName('')
+                        setInviteError('')
                       }}
                       className="flex-1 rounded-xl bg-[#252540]/50 text-[#a0a0b8] py-2.5 text-[13px] font-semibold"
                     >
@@ -614,6 +617,9 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                       {t.home.sendInvites}
                     </motion.button>
                   </div>
+                  {inviteError && (
+                    <p className="text-accent-red text-[12px] mt-2 text-center" role="alert">{inviteError}</p>
+                  )}
                 </div>
               </>
             ) : team ? (
