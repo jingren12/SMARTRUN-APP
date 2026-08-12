@@ -1,0 +1,9 @@
+name = "smartrun-api"
+main = "worker/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "smartrun-db"
+database_id = "41a32dec-20b1-4afe-9f51-1cccbb87e08d"
