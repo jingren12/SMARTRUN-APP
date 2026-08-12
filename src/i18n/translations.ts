@@ -66,6 +66,15 @@ export interface Translations {
     cancelCreate: string;
     createTeam: string;
     deleteTeam: string;
+    sendInvites: string;
+    pendingInvites: string;
+    accept: string;
+    decline: string;
+    pendingStatus: string;
+    sentInvite: string;
+    noInvites: string;
+    inviteFrom: (from: string) => string;
+    captain: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
     planTitles: Record<string, string>;
@@ -249,6 +258,15 @@ const zh: Translations = {
     cancelCreate: '取消',
     createTeam: '创建团队',
     deleteTeam: '解散团队',
+    sendInvites: '发送邀请',
+    pendingInvites: '待处理邀请',
+    accept: '接受',
+    decline: '拒绝',
+    pendingStatus: '待接受',
+    sentInvite: '已发送邀请',
+    noInvites: '暂无邀请',
+    inviteFrom: (from) => `来自 ${from} 的邀请`,
+    captain: '队长',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
       planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
@@ -452,6 +470,15 @@ const en: Translations = {
     cancelCreate: 'Cancel',
     createTeam: 'Create Team',
     deleteTeam: 'Delete Team',
+    sendInvites: 'Send Invites',
+    pendingInvites: 'Pending Invites',
+    accept: 'Accept',
+    decline: 'Decline',
+    pendingStatus: 'Pending',
+    sentInvite: 'Invite Sent',
+    noInvites: 'No Invites',
+    inviteFrom: (from) => `Invite from ${from}`,
+    captain: 'Captain',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
       planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },
