@@ -251,6 +251,30 @@ export function signIn(
   return { ok: true, value: session };
 }
 
+/**
+ * Seed demo accounts into a fresh store so every browser/device starts with
+ * the same shared accounts. No-op if accounts already exist (real sign-ups).
+ */
+export function seedDemoAccounts(storage: AuthStorage = defaultStorage()): void {
+  const store = loadStore(storage);
+  if (store.accounts.length > 0) return;
+  const demoUsers = [
+    { name: '跑者小明', email: 'xiaoming@eos.run', pw: 'demo123' },
+    { name: '跑步小美', email: 'xiaomei@eos.run', pw: 'demo123' },
+    { name: '跑者阿强', email: 'aqiang@eos.run', pw: 'demo123' },
+    { name: '运动小静', email: 'xiaojing@eos.run', pw: 'demo123' },
+  ];
+  const createdAt = new Date('2026-01-01').toISOString();
+  const accounts = demoUsers.map((u) => ({
+    id: crypto.randomUUID(),
+    email: u.email,
+    displayName: u.name,
+    passwordHash: hashPassword(u.pw),
+    createdAt,
+  }));
+  saveStore({ ...store, accounts }, storage);
+}
+
 /** Clear only the session; accounts are preserved. */
 export function signOut(storage: AuthStorage = defaultStorage()): AuthResult<AuthStoreV1> {
   const store = loadStore(storage);
