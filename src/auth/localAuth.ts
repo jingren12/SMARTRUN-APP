@@ -1,4 +1,4 @@
-// Pure TypeScript, localStorage-backed mock auth for the SmartRun SPA.
+// Pure TypeScript, localStorage-backed mock auth for the eos SPA.
 // No React, no backend, no third-party deps. Synchronous storage with a
 // small injectable `AuthStorage` so callers can substitute an in-memory fake
 // for pure tests / future verification. All write paths return
