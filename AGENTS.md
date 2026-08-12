@@ -1,4 +1,4 @@
-# AGENTS.md — SmartRun App
+# AGENTS.md — eos App
 
 ## Architecture
 

@@ -1,4 +1,4 @@
-# SmartRun App
+# eos App
 
 Mobile-first running companion with AI coach, robot control, and training analytics.
 
@@ -7,7 +7,7 @@ Mobile-first running companion with AI coach, robot control, and training analyt
 - **Training Dashboard** — Today's plan, recovery index, fatigue level, weekly streak
 - **GPS Run Tracking** — Real-time metrics (pace, heart rate, cadence), route preview, AI live coaching
 - **AI Coach** — Personalized training advice, form analysis, heart rate zone distribution, Q&A
-- **Robot Companion** — SmartRun X1 robot control: follow mode, supply mode, auto-record, remote control
+- **Robot Companion** — eos X1 robot control: follow mode, supply mode, auto-record, remote control
 - **Team (团队)** — Share stats with friends, schedule group runs together
 - **🌐 i18n** — Chinese / English language toggle with full UI translation
 

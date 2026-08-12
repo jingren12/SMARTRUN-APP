@@ -1,16 +1,16 @@
-# SmartRun Design System
+# eos Design System
 
-This document describes the visual system that already exists in SmartRun. It is an implementation contract for future UI work, including the planned Chrome PWA install experience. It records current behavior rather than introducing a new visual direction.
+This document describes the visual system that already exists in eos. It is an implementation contract for future UI work, including the planned Chrome PWA install experience. It records current behavior rather than introducing a new visual direction.
 
 ## 1. Atmosphere & Identity
 
-SmartRun feels like a focused night-run command center: compact, energetic, and data-rich without becoming noisy. The signature is neon green information emerging from layered indigo-black glass surfaces. The interface is intentionally mobile-first and framed like a personal running device, with small moments of glow, progress, and motion reinforcing momentum.
+eos feels like a focused night-run command center: compact, energetic, and data-rich without becoming noisy. The signature is neon green information emerging from layered indigo-black glass surfaces. The interface is intentionally mobile-first and framed like a personal running device, with small moments of glow, progress, and motion reinforcing momentum.
 
 ## 2. Color
 
 ### Palette
 
-SmartRun is dark-only. These tokens are defined in `src/index.css` under Tailwind v4 `@theme`.
+eos is dark-only. These tokens are defined in `src/index.css` under Tailwind v4 `@theme`.
 
 | Role | Token | Value | Usage |
 |------|-------|-------|-------|
@@ -160,7 +160,7 @@ Spacing follows a 4px base unit, with the current UI most frequently using 4px, 
 
 ### AuthScreen
 
-- **Structure**: full-viewport sign-in surface rendered inside the 393px mobile shell before any authenticated UI. A centered glass panel contains the SmartRun wordmark, a short Chinese-language prompt, an email/identifier field, a password field, a primary submit button, and an inline error region. No `NavBar` is rendered until authentication succeeds.
+- **Structure**: full-viewport sign-in surface rendered inside the 393px mobile shell before any authenticated UI. A centered glass panel contains the eos wordmark, a short Chinese-language prompt, an email/identifier field, a password field, a primary submit button, and an inline error region. No `NavBar` is rendered until authentication succeeds.
 - **Variants**: sign-in (default); a toggle to a sign-up mode may be added later but is not part of the initial contract. Loading state on the submit button while a mock request is "in flight".
 - **Spacing**: panel padding 20px (`space-5`); field stack gap 12px (`space-3`); submit button top margin 16px (`space-4`); error text 8px (`space-2`) below the button. Panel is vertically centered with at least 24px (`space-6`) of safe-area-aware breathing room top and bottom.
 - **States**:
@@ -207,7 +207,7 @@ Spacing follows a 4px base unit, with the current UI most frequently using 4px, 
 
 ### Strategy
 
-SmartRun uses a **mixed** strategy led by translucent tonal-shift surfaces, with restrained borders and rare ambient glow.
+eos uses a **mixed** strategy led by translucent tonal-shift surfaces, with restrained borders and rare ambient glow.
 
 - Base background: `#0a0a0f`.
 - Card surface: `rgba(26, 26, 46, 0.6)` with 20px backdrop blur.
