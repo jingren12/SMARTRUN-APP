@@ -15,11 +15,13 @@ export interface TeamData {
   }
 }
 
-const STORAGE_KEY = 'eos-team-v1'
+function storageKey(userId: string): string {
+  return `eos-team-${userId}`
+}
 
-export function loadTeam(): TeamData | null {
+export function loadTeam(userId: string): TeamData | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey(userId))
     if (raw === null) return null
     const parsed: unknown = JSON.parse(raw)
     if (
@@ -36,12 +38,12 @@ export function loadTeam(): TeamData | null {
   }
 }
 
-export function saveTeam(team: TeamData | null): void {
+export function saveTeam(team: TeamData | null, userId: string): void {
   try {
     if (team === null) {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(storageKey(userId))
     } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(team))
+      localStorage.setItem(storageKey(userId), JSON.stringify(team))
     }
   } catch {
     // storage unavailable — swallow

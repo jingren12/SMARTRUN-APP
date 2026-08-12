@@ -200,7 +200,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
   const recoveryScore = 82
   const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
-  const [team, setTeam] = useState<Party | null>(() => loadTeam() as Party | null)
+  const [team, setTeam] = useState<Party | null>(() => loadTeam(session.userId) as Party | null)
   const [creating, setCreating] = useState(false)
   const [teamName, setTeamName] = useState('')
   const [customMemberName, setCustomMemberName] = useState('')
@@ -220,7 +220,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
       avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
     }))
     const newTeam: Party = { name: teamName.trim(), members }
-    saveTeam(newTeam)
+    saveTeam(newTeam, session.userId)
     setTeam(newTeam)
     setCreating(false)
     setTeamName('')
@@ -229,7 +229,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
   }
 
   const handleDeleteTeam = () => {
-    saveTeam(null)
+    saveTeam(null, session.userId)
     setTeam(null)
   }
 
