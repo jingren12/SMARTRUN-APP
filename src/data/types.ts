@@ -159,6 +159,7 @@ export type AuthErrorCode =
   | 'invalid_display_name'
   | 'email_taken'
   | 'invalid_credentials'
+  | 'display_name_taken'
   | 'storage_unavailable';
 
 export type AuthResult<T> =

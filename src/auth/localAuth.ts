@@ -180,14 +180,25 @@ export function signUp(
   const normalizedEmail = normalizeEmail(email);
   const trimmedName = displayName.trim();
   const store = loadStore(storage);
+
   if (store.accounts.some((a) => a.email === normalizedEmail)) {
     return { ok: false, error: 'email_taken' };
   }
 
-  // 检查是否有相同显示名称的账户，如果有则删除旧的
-  const cleanedAccounts = store.accounts.filter(
-    (a) => a.displayName.toLowerCase() !== trimmedName.toLowerCase(),
-  );
+  // Dedup: 清理已有的重复显示名称
+  const seen = new Set<string>();
+  const dedupedAccounts = store.accounts.filter((a) => {
+    const key = a.displayName.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // 检查新名称是否已被占用
+  if (dedupedAccounts.some((a) => a.displayName.toLowerCase() === trimmedName.toLowerCase())) {
+    // 如果有重复的脏数据已经清理完，但目标名称仍然被占用则拒绝
+    return { ok: false, error: 'display_name_taken' };
+  }
 
   const createdAt = nowIso();
   const account: AuthAccount = {
@@ -205,7 +216,7 @@ export function signUp(
   };
   const nextStore: AuthStoreV1 = {
     version: 1,
-    accounts: [...cleanedAccounts, account],
+    accounts: [...dedupedAccounts, account],
     session,
   };
   const saved = saveStore(nextStore, storage);
