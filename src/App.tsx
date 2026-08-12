@@ -211,16 +211,32 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
     if (!teamName.trim()) return
     if (selectedMembers.length === 0 && !customMemberName.trim()) return
     const allNames = [...selectedMembers]
+    // auto-include creator as first member
+    if (!allNames.includes(session.displayName)) {
+      allNames.unshift(session.displayName)
+    }
     if (customMemberName.trim()) {
       allNames.push(customMemberName.trim())
     }
-    const members = allNames.map(name => ({
-      name,
-      weeklyDist: Math.floor(Math.random() * 40 + 15),
-      avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
-    }))
+    // map selected names to their userIds from auth store
+    const selectedUserIds = otherAccounts
+      .filter(a => selectedMembers.includes(a.displayName))
+      .map(a => a.id)
+    const members = allNames.map(name => {
+      const account = otherAccounts.find(a => a.displayName === name)
+      return {
+        name,
+        userId: account?.id,
+        weeklyDist: Math.floor(Math.random() * 40 + 15),
+        avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
+      }
+    })
     const newTeam: Party = { name: teamName.trim(), members }
-    saveTeam(newTeam, session.userId)
+    // save to creator + every account-based member so all can see it
+    const allUserIds = [session.userId, ...selectedUserIds]
+    for (const uid of allUserIds) {
+      saveTeam(newTeam, uid)
+    }
     setTeam(newTeam)
     setCreating(false)
     setTeamName('')
@@ -229,7 +245,15 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
   }
 
   const handleDeleteTeam = () => {
-    saveTeam(null, session.userId)
+    if (!team) return
+    // collect member userIds from stored team data
+    const memberIds = team.members
+      .map(m => (m as { userId?: string }).userId)
+      .filter((id): id is string => !!id)
+    const allUserIds = [session.userId, ...memberIds]
+    for (const uid of allUserIds) {
+      saveTeam(null, uid)
+    }
     setTeam(null)
   }
 

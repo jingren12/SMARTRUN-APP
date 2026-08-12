@@ -1,13 +1,16 @@
 // ─── Team Store ────────────────────────────────────────────
 // localStorage-backed team persistence per account
 
+export interface TeamMember {
+  readonly name: string
+  readonly weeklyDist: number
+  readonly avgPace: string
+  readonly userId?: string
+}
+
 export interface TeamData {
   readonly name: string
-  readonly members: readonly {
-    readonly name: string
-    readonly weeklyDist: number
-    readonly avgPace: string
-  }[]
+  readonly members: readonly TeamMember[]
   readonly scheduledRun?: {
     readonly date: string
     readonly time: string
