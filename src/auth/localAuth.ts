@@ -184,6 +184,11 @@ export function signUp(
     return { ok: false, error: 'email_taken' };
   }
 
+  // 检查是否有相同显示名称的账户，如果有则删除旧的
+  const cleanedAccounts = store.accounts.filter(
+    (a) => a.displayName.toLowerCase() !== trimmedName.toLowerCase(),
+  );
+
   const createdAt = nowIso();
   const account: AuthAccount = {
     id: createId(),
@@ -200,7 +205,7 @@ export function signUp(
   };
   const nextStore: AuthStoreV1 = {
     version: 1,
-    accounts: [...store.accounts, account],
+    accounts: [...cleanedAccounts, account],
     session,
   };
   const saved = saveStore(nextStore, storage);
