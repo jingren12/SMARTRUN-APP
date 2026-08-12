@@ -59,6 +59,13 @@ export interface Translations {
     noPartyYet: string;
     noPartyHint: string;
     inviteHint: string;
+    createTeamName: string;
+    availableUsers: string;
+    addMember: string;
+    memberNamePlaceholder: string;
+    cancelCreate: string;
+    createTeam: string;
+    deleteTeam: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
     planTitles: Record<string, string>;
@@ -234,6 +241,13 @@ const zh: Translations = {
     noPartyYet: '还没有团队',
     noPartyHint: '创建一个团队，和朋友一起跑！',
     inviteHint: '邀请好友加入团队',
+    createTeamName: '团队名称',
+    availableUsers: '可选成员',
+    addMember: '添加成员',
+    memberNamePlaceholder: '输入成员名称',
+    cancelCreate: '取消',
+    createTeam: '创建团队',
+    deleteTeam: '解散团队',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
       planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
@@ -429,6 +443,13 @@ const en: Translations = {
     noPartyYet: 'No Team Yet',
     noPartyHint: 'Create a team and run with friends!',
     inviteHint: 'Invite friends to join',
+    createTeamName: 'Team Name',
+    availableUsers: 'Available Users',
+    addMember: 'Add Member',
+    memberNamePlaceholder: 'Enter member name',
+    cancelCreate: 'Cancel',
+    createTeam: 'Create Team',
+    deleteTeam: 'Delete Team',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
       planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },
