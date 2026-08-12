@@ -6,6 +6,7 @@ export interface TeamMember {
   readonly weeklyDist: number
   readonly avgPace: string
   readonly userId?: string
+  readonly status?: 'pending' | 'accepted'
 }
 
 export interface TeamData {
