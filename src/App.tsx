@@ -221,11 +221,11 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
     }
     if (customMemberName.trim()) {
       const trimmed = customMemberName.trim()
-      const existingAccount = loadStore().accounts.find(
+      const exists = loadStore().accounts.some(
         a => a.displayName.toLowerCase() === trimmed.toLowerCase() && a.id !== session.userId,
       )
-      if (existingAccount && !selectedMembers.includes(existingAccount.displayName)) {
-        window.alert(`"${trimmed}" 已存在账号，请从可选成员中选择`)
+      if (!exists) {
+        window.alert(`"${trimmed}" 不存在，无法邀请`)
         return
       }
       allNames.push(trimmed)
