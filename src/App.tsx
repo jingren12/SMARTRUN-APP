@@ -7,6 +7,9 @@ import type { AuthMode, AuthErrorCode, AuthSession } from './data/types'
 import { getSession, signIn, signUp, signOut, loadStore } from './auth/localAuth'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 import { loadTeam, saveTeam } from './team/team'
+import type { TeamData, TeamMember } from './team/team'
+import type { TeamInvite } from './invite/invite'
+import { loadInvites, saveInvites, sendInvite, removeInvite } from './invite/invite'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -26,9 +29,6 @@ interface Achievement { id: string; title: string; icon: string; unlocked: boole
 interface GrowthData { week: string; distance: number; pace: number; heartRate: number }
 interface TrendData { month: string; distance: number; runs: number }
 interface HRZone { zone: string; range: string; percent: number; color: string }
-interface PartyMember { name: string; weeklyDist: number; avgPace: string }
-interface ScheduledRun { date: string; time: string; route: string }
-interface Party { name: string; members: PartyMember[]; scheduledRun?: ScheduledRun }
 
 // ─── Mock Data ────────────────────────────────────────────
 const weather: Weather = { temp: 22, condition: '多云', aqi: 42, aqiLevel: '优', humidity: 65, windSpeed: 12 }
@@ -200,7 +200,12 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
   const recoveryScore = 82
   const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
-  const [team, setTeam] = useState<Party | null>(() => loadTeam(session.userId) as Party | null)
+  const [team, setTeam] = useState<TeamData | null>(() => loadTeam(session.userId))
+  const [invites, setInvites] = useState<TeamInvite[]>(() => loadInvites(session.userId))
+  const [showSentFeedback, setShowSentFeedback] = useState(false)
+
+  const refreshInvites = () => setInvites(loadInvites(session.userId))
+
   const [creating, setCreating] = useState(false)
   const [teamName, setTeamName] = useState('')
   const [customMemberName, setCustomMemberName] = useState('')
@@ -211,33 +216,37 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
     if (!teamName.trim()) return
     if (selectedMembers.length === 0 && !customMemberName.trim()) return
     const allNames = [...selectedMembers]
-    // auto-include creator as first member
     if (!allNames.includes(session.displayName)) {
       allNames.unshift(session.displayName)
     }
     if (customMemberName.trim()) {
       allNames.push(customMemberName.trim())
     }
-    // map selected names to their userIds from auth store
-    const selectedUserIds = otherAccounts
-      .filter(a => selectedMembers.includes(a.displayName))
-      .map(a => a.id)
-    const members = allNames.map(name => {
-      const account = otherAccounts.find(a => a.displayName === name)
-      return {
-        name,
-        userId: account?.id,
-        weeklyDist: Math.floor(Math.random() * 40 + 15),
-        avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
-      }
+    const getStats = () => ({
+      weeklyDist: Math.floor(Math.random() * 40 + 15),
+      avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
     })
-    const newTeam: Party = { name: teamName.trim(), members }
-    // save to creator + every account-based member so all can see it
-    const allUserIds = [session.userId, ...selectedUserIds]
-    for (const uid of allUserIds) {
-      saveTeam(newTeam, uid)
+    const members: TeamMember[] = allNames.map(name => {
+      if (name === session.displayName) {
+        return { name, userId: session.userId, status: 'accepted', ...getStats() }
+      }
+      const account = otherAccounts.find(a => a.displayName === name)
+      if (account) {
+        return { name, userId: account.id, status: 'pending', ...getStats() }
+      }
+      return { name, status: 'accepted', ...getStats() }
+    })
+    const newTeam: TeamData = { name: teamName.trim(), members }
+    saveTeam(newTeam, session.userId)
+    // send invites to account-based pending members
+    for (const m of members) {
+      if (m.userId && m.userId !== session.userId) {
+        sendInvite(session.userId, session.displayName, m.userId, { name: newTeam.name, members })
+      }
     }
     setTeam(newTeam)
+    setShowSentFeedback(true)
+    window.setTimeout(() => setShowSentFeedback(false), 3000)
     setCreating(false)
     setTeamName('')
     setSelectedMembers([])
@@ -246,15 +255,65 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
 
   const handleDeleteTeam = () => {
     if (!team) return
-    // collect member userIds from stored team data
-    const memberIds = team.members
-      .map(m => (m as { userId?: string }).userId)
-      .filter((id): id is string => !!id)
-    const allUserIds = [session.userId, ...memberIds]
-    for (const uid of allUserIds) {
+    // clear invites sent from this user to all pending members
+    for (const m of team.members) {
+      if (m.userId && m.status !== 'accepted') {
+        const userInvites = loadInvites(m.userId).filter(inv => inv.fromUserId !== session.userId)
+        saveInvites(m.userId, userInvites)
+      }
+    }
+    // delete team from all accepted members' storage
+    const deleteIds = [
+      session.userId,
+      ...team.members
+        .filter(m => m.status === 'accepted' && m.userId)
+        .map(m => m.userId as string),
+    ]
+    for (const uid of [...new Set(deleteIds)]) {
       saveTeam(null, uid)
     }
     setTeam(null)
+  }
+
+  const handleAcceptInvite = (invite: TeamInvite) => {
+    const members = invite.members.map(m => {
+      if (m.name === session.displayName || m.userId === session.userId) {
+        return { ...m, status: 'accepted' as const }
+      }
+      return m
+    })
+    const acceptedTeam: TeamData = { name: invite.teamName, members }
+    saveTeam(acceptedTeam, session.userId)
+    // also update creator's team (same localStorage, single-device)
+    const creatorTeam = loadTeam(invite.fromUserId)
+    if (creatorTeam) {
+      const updatedMembers = creatorTeam.members.map(m => {
+        if (m.name === session.displayName || m.userId === session.userId) {
+          return { ...m, status: 'accepted' as const }
+        }
+        return m
+      })
+      saveTeam({ ...creatorTeam, members: updatedMembers }, invite.fromUserId)
+    }
+    removeInvite(session.userId, invite.id)
+    setTeam(acceptedTeam)
+    refreshInvites()
+  }
+
+  const handleDeclineInvite = (invite: TeamInvite) => {
+    removeInvite(session.userId, invite.id)
+    const creatorTeam = loadTeam(invite.fromUserId)
+    if (creatorTeam) {
+      const updatedMembers = creatorTeam.members.filter(
+        m => m.name !== session.displayName && m.userId !== session.userId
+      )
+      if (updatedMembers.length > 0) {
+        saveTeam({ ...creatorTeam, members: updatedMembers }, invite.fromUserId)
+      } else {
+        saveTeam(null, invite.fromUserId)
+      }
+    }
+    refreshInvites()
   }
 
   const toggleMember = (name: string) => {
@@ -430,6 +489,45 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
 
         {/* Party / Team */}
         <SectionH title={t.home.party} />
+
+        {invites.length > 0 && !team && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <GlassCard className="p-4 mb-4">
+              <SectionH title={t.home.pendingInvites} />
+              <div className="space-y-2">
+                {invites.map(inv => (
+                  <div key={inv.id} className="flex items-center gap-3 bg-[#252540]/30 rounded-xl px-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-[13px] font-medium">{t.home.inviteFrom(inv.fromName)}</div>
+                      <div className="text-[#a0a0b8] text-[12px]">{inv.teamName}</div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleAcceptInvite(inv)}
+                        className="px-3 py-1.5 rounded-lg bg-neon/20 border border-neon/30 text-neon text-[12px] font-semibold"
+                      >
+                        {t.home.accept}
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeclineInvite(inv)}
+                        className="px-3 py-1.5 rounded-lg bg-accent-red/10 border border-accent-red/30 text-accent-red text-[12px] font-semibold"
+                      >
+                        {t.home.decline}
+                      </motion.button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -505,7 +603,7 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                       onClick={handleCreateTeam}
                       className="flex-1 rounded-xl bg-neon/20 border border-neon/30 text-neon py-2.5 text-[13px] font-semibold"
                     >
-                      {t.home.createTeam ?? '创建团队'}
+                      {t.home.sendInvites}
                     </motion.button>
                   </div>
                 </div>
@@ -536,7 +634,15 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
                         {m.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-[13px] font-medium truncate">{m.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-white text-[13px] font-medium truncate">{m.name}</span>
+                          {m.userId === session.userId && (
+                            <Badge color="#00ff88" className="!px-1.5 !py-0 text-[9px]">{t.home.captain}</Badge>
+                          )}
+                          {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.userId)) && (
+                            <Badge color="#ff6b35" className="!px-1.5 !py-0 text-[9px]">{t.home.pendingStatus}</Badge>
+                          )}
+                        </div>
                         <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
                       </div>
                       <div className="text-right shrink-0">
@@ -603,6 +709,15 @@ function Home({ session, onStartTraining }: { session: AuthSession; onStartTrain
             </div>
           </div>
         </GlassCard>
+
+        {showSentFeedback && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+            <GlassCard className="p-3 flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-neon"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span className="text-white text-[13px] font-medium">{t.home.sentInvite}</span>
+            </GlassCard>
+          </motion.div>
+        )}
       </div>
     </div>
   )
