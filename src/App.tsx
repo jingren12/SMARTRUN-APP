@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode, AuthSession } from './data/types'
-import { getSession, signIn, signUp, signOut } from './auth/localAuth'
+import { getSession, signIn, signUp, signOut, loadStore } from './auth/localAuth'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
+import { loadTeam, saveTeam } from './team/team'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -95,17 +96,6 @@ const achievements: Achievement[] = [
   { id: 'a7', title: '月度200km', icon: '💪', unlocked: false },
   { id: 'a8', title: '完美一周', icon: '✨', unlocked: false },
 ]
-
-const party: Party = {
-  name: '晨跑小分队',
-  members: [
-    { name: '跑者', weeklyDist: 42.5, avgPace: '5:20' },
-    { name: '小明', weeklyDist: 35.2, avgPace: '5:45' },
-    { name: '小红', weeklyDist: 28.8, avgPace: '6:10' },
-    { name: '大壮', weeklyDist: 55.0, avgPace: '4:55' },
-  ],
-  scheduledRun: { date: '07/20', time: '06:30', route: '滨江公园 7.5km' },
-}
 
 // ─── Shared Components ────────────────────────────────────
 
@@ -203,13 +193,51 @@ function PageWrap({ tab, children }: { tab: Tab; children: ReactNode }) {
 
 // ─── Page: Home ────────────────────────────────────────────
 
-function Home({ onStartTraining }: { onStartTraining?: () => void }) {
+function Home({ session, onStartTraining }: { session: AuthSession; onStartTraining?: () => void }) {
   const t = useT()
   const streakDays = 18
   const [showAllRuns, setShowAllRuns] = useState(false)
   const recoveryScore = 82
   const weekDays = t.home.weekDays
   const todayIdx = new Date().getDay() - 1 || 6
+  const [team, setTeam] = useState<Party | null>(() => loadTeam() as Party | null)
+  const [creating, setCreating] = useState(false)
+  const [teamName, setTeamName] = useState('')
+  const [customMemberName, setCustomMemberName] = useState('')
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const otherAccounts = loadStore().accounts.filter(a => a.id !== session.userId)
+
+  const handleCreateTeam = () => {
+    if (!teamName.trim()) return
+    if (selectedMembers.length === 0 && !customMemberName.trim()) return
+    const allNames = [...selectedMembers]
+    if (customMemberName.trim()) {
+      allNames.push(customMemberName.trim())
+    }
+    const members = allNames.map(name => ({
+      name,
+      weeklyDist: Math.floor(Math.random() * 40 + 15),
+      avgPace: `${Math.floor(Math.random() * 2 + 4)}:${Math.floor(Math.random() * 40 + 20)}`,
+    }))
+    const newTeam: Party = { name: teamName.trim(), members }
+    saveTeam(newTeam)
+    setTeam(newTeam)
+    setCreating(false)
+    setTeamName('')
+    setSelectedMembers([])
+    setCustomMemberName('')
+  }
+
+  const handleDeleteTeam = () => {
+    saveTeam(null)
+    setTeam(null)
+  }
+
+  const toggleMember = (name: string) => {
+    setSelectedMembers(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    )
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -384,75 +412,158 @@ function Home({ onStartTraining }: { onStartTraining?: () => void }) {
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         >
           <GlassCard className="p-4 mb-5">
-            {/* Header: party name + member count */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                <div>
-                  <div className="text-white text-[15px] font-semibold leading-tight">{party.name}</div>
-                  <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {party.members.length}</div>
-                </div>
-              </div>
-              <Badge color="#7c5cff">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
-                {t.home.createParty}
-              </Badge>
-            </div>
+            {creating ? (
+              <>
+                {/* ── Create Team Form ── */}
+                <div className="mb-3">
+                  <label className="text-white text-[13px] font-semibold mb-2 block">{t.home.party}</label>
+                  <input
+                    type="text"
+                    value={teamName}
+                    onChange={e => setTeamName(e.target.value)}
+                    placeholder={t.home.createTeamName ?? '团队名称'}
+                    className="w-full rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2 text-white text-[13px] focus:outline-none focus:border-neon/50 placeholder-[#4a4a6a] mb-3"
+                  />
 
-            {/* Members list */}
-            <div className="space-y-1.5 mb-3">
-              {party.members.map((m, i) => (
-                <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
-                    {m.name.charAt(0)}
+                  {/* Available accounts */}
+                  {otherAccounts.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-[#a0a0b8] text-[11px] font-medium mb-1.5">{t.home.availableUsers ?? '可选成员'}</div>
+                      <div className="space-y-1">
+                        {otherAccounts.map(a => (
+                          <label key={a.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#252540]/30 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedMembers.includes(a.displayName)}
+                              onChange={() => toggleMember(a.displayName)}
+                              className="w-4 h-4 rounded border-[#2a2a40] bg-[#252540] text-neon focus:ring-neon/30"
+                            />
+                            <div>
+                              <div className="text-white text-[13px] font-medium">{a.displayName}</div>
+                              <div className="text-[#6b6b8d] text-[11px]">{a.email}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom member name */}
+                  <div className="mb-3">
+                    <div className="text-[#a0a0b8] text-[11px] font-medium mb-1.5">{t.home.addMember ?? '添加成员'}</div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={customMemberName}
+                        onChange={e => setCustomMemberName(e.target.value)}
+                        placeholder={t.home.memberNamePlaceholder ?? '输入成员名称'}
+                        className="flex-1 rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2 text-white text-[13px] focus:outline-none focus:border-neon/50 placeholder-[#4a4a6a]"
+                      />
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-[13px] font-medium truncate">{m.name}</div>
-                    <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
-                    <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 pt-2 border-t border-[#2a2a40]/50">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        setCreating(false)
+                        setTeamName('')
+                        setSelectedMembers([])
+                        setCustomMemberName('')
+                      }}
+                      className="flex-1 rounded-xl bg-[#252540]/50 text-[#a0a0b8] py-2.5 text-[13px] font-semibold"
+                    >
+                      {t.home.cancelCreate ?? '取消'}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleCreateTeam}
+                      className="flex-1 rounded-xl bg-neon/20 border border-neon/30 text-neon py-2.5 text-[13px] font-semibold"
+                    >
+                      {t.home.createTeam ?? '创建团队'}
+                    </motion.button>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                {t.home.shareStats}
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                {t.home.scheduleRun}
-              </motion.button>
-            </div>
-
-            {/* Scheduled run badge */}
-            {party.scheduledRun && (
-              <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-accent-orange/10 border border-accent-orange/20 px-3 py-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-orange shrink-0"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <div className="flex-1 min-w-0">
-                  <div className="text-accent-orange text-[11px] font-semibold uppercase tracking-wide">{t.home.scheduledRun}</div>
-                  <div className="text-white text-[12px] font-medium mt-0.5 truncate">
-                    {party.scheduledRun.date} · {party.scheduledRun.time} · {t.routes[party.scheduledRun.route] ?? party.scheduledRun.route}
+              </>
+            ) : team ? (
+              <>
+                {/* ── Existing Team Display ── */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    </div>
+                    <div>
+                      <div className="text-white text-[15px] font-semibold leading-tight">{team.name}</div>
+                      <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {team.members.length}</div>
+                    </div>
                   </div>
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
+                    {t.home.deleteTeam ?? '解散团队'}
+                  </motion.button>
                 </div>
-              </div>
+
+                {/* Members list */}
+                <div className="space-y-1.5 mb-3">
+                  {team.members.map((m, i) => (
+                    <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+                        {m.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-[13px] font-medium truncate">{m.name}</div>
+                        <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
+                        <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    {t.home.shareStats}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {t.home.scheduleRun}
+                  </motion.button>
+                </div>
+
+                {/* Invite hint */}
+                <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
+              </>
+            ) : (
+              <>
+                {/* ── No Team / Create CTA ── */}
+                <div className="text-center py-4">
+                  <div className="w-12 h-12 rounded-xl bg-accent-purple/20 mx-auto flex items-center justify-center mb-3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  </div>
+                  <div className="text-white text-[15px] font-semibold mb-1">{t.home.noPartyYet}</div>
+                  <div className="text-[#a0a0b8] text-[12px] mb-4">{t.home.noPartyHint}</div>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setCreating(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent-purple/20 border border-accent-purple/30 text-accent-purple px-5 py-2.5 text-[13px] font-semibold"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+                    {t.home.createParty}
+                  </motion.button>
+                </div>
+              </>
             )}
-
-            {/* Invite hint */}
-            <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
           </GlassCard>
         </motion.div>
 
@@ -1344,7 +1455,7 @@ export default function App() {
   return (
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
       <PageWrap tab={tab}>
-        {tab === 'home' && <Home onStartTraining={handleStartTraining} />}
+        {tab === 'home' && <Home session={session} onStartTraining={handleStartTraining} />}
         {tab === 'run' && <RunPage session={session} />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}
