@@ -83,6 +83,7 @@ export interface Translations {
     aiRealtimeText: string;
     metrics: { duration: string; distance: string; heartRate: string; cadence: string };
     sos: string;
+    xpGained: (amount: number, level: number) => string;
   };
 
   // ─── AI Coach Page ───
@@ -130,9 +131,10 @@ export interface Translations {
   profile: {
     name: string;
     plusMember: string;
-    levelTitle: (level: number, title: string) => string;
+    levelTitle: (level: number) => string;
     nextLevel: (level: number) => string;
-    levelProgress: { zero: string; goal: string; targetKm: number };
+    levelProgress: { zero: string; xp: string };
+    runsCount: (n: number) => string;
     statLabels: { totalDist: string; robotDist: string; streak: string; aiScore: string };
     achievements: string;
     equipment: string;
@@ -258,6 +260,7 @@ const zh: Translations = {
       aiRealtimeText: '保持节奏，步频提升至180。注意呼吸，三步一吸两步一呼。',
     metrics: { duration: '时长', distance: '距离', heartRate: '心率', cadence: '步频' },
     sos: 'SOS',
+    xpGained: (amount: number, level: number) => `+${amount} XP (Lv.${level})`,
   },
   aicoach: {
     title: 'AI 教练',
@@ -315,9 +318,13 @@ const zh: Translations = {
   profile: {
     name: '跑者',
     plusMember: 'Plus 会员',
-    levelTitle: (_level: number, title: string) => title,
+    levelTitle: (level: number) => {
+      const titles = ['新手跑者', '入门跑者', '进阶跑者', '精英跑者', '大师跑者', '传奇跑者'];
+      return titles[Math.min(level, titles.length - 1)] ?? titles[titles.length - 1];
+    },
     nextLevel: (level: number) => `下一级: Lv.${level}`,
-    levelProgress: { zero: '0 km', goal: '目标 500 km', targetKm: 500 },
+    levelProgress: { zero: '0', xp: '经验值' },
+    runsCount: (n: number) => `${n} 次训练`,
     statLabels: { totalDist: '总距离', robotDist: '机器人陪跑', streak: '连续训练', aiScore: 'AI评分' },
     achievements: '成就',
     equipment: '装备管理',
@@ -448,6 +455,7 @@ const en: Translations = {
       aiRealtimeText: 'Maintain your pace — raise cadence to 180 steps/min. Remember to breathe: inhale for 3 steps, exhale for 2 steps.',
     metrics: { duration: 'Duration', distance: 'Distance', heartRate: 'Heart Rate', cadence: 'Cadence' },
     sos: 'SOS',
+    xpGained: (amount: number, level: number) => `+${amount} XP (Lv.${level})`,
   },
   aicoach: {
     title: 'AI Coach',
@@ -505,12 +513,13 @@ const en: Translations = {
   profile: {
     name: 'Runner',
     plusMember: 'Plus Member',
-    levelTitle: (_level: number, title: string) => {
-      const enTitles: Record<string, string> = { '白银跑者': 'Silver Runner', '黄金跑者': 'Gold Runner', '钻石跑者': 'Diamond Runner' };
-      return enTitles[title] ?? title;
+    levelTitle: (level: number) => {
+      const titles = ['New Runner', 'Beginner', 'Advanced', 'Elite', 'Master', 'Legend'];
+      return titles[Math.min(level, titles.length - 1)] ?? titles[titles.length - 1];
     },
     nextLevel: (level: number) => `Next: Lv.${level}`,
-    levelProgress: { zero: '0 km', goal: 'Goal 500 km', targetKm: 500 },
+    levelProgress: { zero: '0', xp: 'XP' },
+    runsCount: (n: number) => `${n} Runs`,
     statLabels: { totalDist: 'Total Distance', robotDist: 'Robot Distance', streak: 'Streak', aiScore: 'AI Score' },
     achievements: 'Achievements',
     equipment: 'Equipment',
