@@ -203,7 +203,7 @@ function PageWrap({ tab, children }: { tab: Tab; children: ReactNode }) {
 
 // ─── Page: Home ────────────────────────────────────────────
 
-function Home() {
+function Home({ onStartTraining }: { onStartTraining?: () => void }) {
   const t = useT()
   const streakDays = 18
   const [showAllRuns, setShowAllRuns] = useState(false)
@@ -242,7 +242,7 @@ function Home() {
         </div>
 
         {/* Start Training CTA */}
-        <motion.button whileTap={{ scale: 0.97 }} className="w-full mb-5 relative overflow-hidden rounded-2xl bg-gradient-to-r from-neon/20 via-neon/10 to-transparent border border-neon/20 p-4">
+        <motion.button whileTap={{ scale: 0.97 }} onClick={onStartTraining} className="w-full mb-5 relative overflow-hidden rounded-2xl bg-gradient-to-r from-neon/20 via-neon/10 to-transparent border border-neon/20 p-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-white text-[15px] font-semibold">{t.home.todayTraining}</div>
@@ -1329,6 +1329,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const inRun = false
 
+  const handleStartTraining = () => setTab('run')
+
   const handleLogout = () => {
     signOut()
     setSession(null)
@@ -1342,7 +1344,7 @@ export default function App() {
   return (
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
       <PageWrap tab={tab}>
-        {tab === 'home' && <Home />}
+        {tab === 'home' && <Home onStartTraining={handleStartTraining} />}
         {tab === 'run' && <RunPage session={session} />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}
