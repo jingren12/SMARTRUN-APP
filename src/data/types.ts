@@ -164,3 +164,11 @@ export type AuthErrorCode =
 export type AuthResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: AuthErrorCode };
+
+export interface ProgressStore {
+  readonly version: 1;
+  readonly userId: string;
+  xp: number;
+  level: number;
+  runCount: number;
+}
