@@ -11,6 +11,7 @@ export interface TeamMember {
 
 export interface TeamData {
   readonly name: string
+  readonly createdBy?: string
   readonly members: readonly TeamMember[]
   readonly scheduledRun?: {
     readonly date: string

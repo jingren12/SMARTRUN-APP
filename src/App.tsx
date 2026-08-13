@@ -618,7 +618,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-white text-[13px] font-medium truncate">{m.name}</span>
-                          {m.userId === session.id && (
+                          {team.createdBy && m.userId === team.createdBy && (
                             <Badge color="#00ff88" className="!px-1.5 !py-0 text-[9px]">{t.home.captain}</Badge>
                           )}
                           {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.id)) && (

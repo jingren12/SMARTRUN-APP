@@ -29,6 +29,7 @@ export interface ApiTeamMember {
 
 export interface ApiTeam {
   name: string
+  createdBy?: string
   members: ApiTeamMember[]
 }
 
