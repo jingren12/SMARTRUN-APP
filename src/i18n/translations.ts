@@ -90,6 +90,12 @@ export interface Translations {
     cancelRun: string;
     scheduleError: string;
     rsvpError: string;
+    confirmTitle: string;
+    confirmYes: string;
+    confirmLeave: string;
+    confirmDisband: string;
+    confirmCancelRun: string;
+    confirmLogout: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
     planTitles: Record<string, string>;
@@ -297,6 +303,12 @@ const zh: Translations = {
       cancelRun: '取消约跑',
       scheduleError: '预约失败',
       rsvpError: '操作失败',
+      confirmTitle: '确认',
+      confirmYes: '确定',
+      confirmLeave: '确定退出队伍？',
+      confirmDisband: '确认解散队伍？',
+      confirmCancelRun: '确认取消约跑？',
+      confirmLogout: '确认退出登录？',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
       planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
@@ -524,6 +536,12 @@ const en: Translations = {
       cancelRun: 'Cancel run',
       scheduleError: 'Failed to schedule',
       rsvpError: 'Failed to update RSVP',
+      confirmTitle: 'Confirm',
+      confirmYes: 'Yes',
+      confirmLeave: 'Leave the team?',
+      confirmDisband: 'Disband the team?',
+      confirmCancelRun: 'Cancel this run?',
+      confirmLogout: 'Log out?',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
       planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },

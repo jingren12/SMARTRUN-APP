@@ -150,6 +150,41 @@ function Badge({ children, color = '#00ff88', className = '' }: { children: Reac
   )
 }
 
+function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
+  const t = useT()
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        className="w-[300px] rounded-2xl bg-[#1a1a2e] border border-[#2a2a40]/50 p-5 shadow-2xl"
+      >
+        <div className="text-center">
+          <div className="text-white text-[16px] font-semibold mb-1">{t.home.confirmTitle}</div>
+          <p className="text-[#a0a0b8] text-[14px] mb-5">{message}</p>
+          <div className="flex gap-3">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onCancel}
+              className="flex-1 rounded-xl bg-[#252540]/50 text-[#a0a0b8] py-2.5 text-[14px] font-semibold"
+            >
+              {t.home.cancel}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onConfirm}
+              className="flex-1 rounded-xl bg-accent-red/20 border border-accent-red/30 text-accent-red py-2.5 text-[14px] font-semibold"
+            >
+              {t.home.confirmYes}
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // ─── Navigation ───────────────────────────────────────────
 
 function NavBar({ active, onChange, hidden }: { active: Tab; onChange: (t: Tab) => void; hidden: boolean }) {
@@ -215,6 +250,19 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const [schedLocation, setSchedLocation] = useState('')
   const [scheduleSubmitting, setScheduleSubmitting] = useState(false)
   const [scheduleFormError, setScheduleFormError] = useState('')
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
+  const [confirmMessage, setConfirmMessage] = useState('')
+
+  // Poll team data every 15s so members see live changes
+  useEffect(() => {
+    if (!token || !team) return
+    const interval = setInterval(() => {
+      apiGetTeam(token).then(r => {
+        if (r.ok && r.data.team) setTeam(r.data.team as unknown as TeamData)
+      })
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [token, team?.id])
 
   const refreshScheduledRuns = useCallback(() => {
     if (!team) { setScheduledRuns([]); return }
@@ -248,6 +296,11 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const handleCancelRun = async (runId: string) => {
     await apiCancelScheduledRun(token, runId)
     refreshScheduledRuns()
+  }
+
+  const confirmCancelRun = (runId: string) => {
+    setConfirmMessage(t.home.confirmCancelRun)
+    setConfirmAction(() => { handleCancelRun(runId); setConfirmAction(null) })
   }
 
   const refreshInvites = useCallback(() => {
@@ -325,10 +378,20 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
     setTeam(null)
   }
 
+  const confirmDeleteTeam = () => {
+    setConfirmMessage(t.home.confirmDisband)
+    setConfirmAction(() => { handleDeleteTeam(); setConfirmAction(null) })
+  }
+
   const handleLeaveTeam = async () => {
     if (!team) return
     await apiLeaveTeam(token)
     setTeam(null)
+  }
+
+  const confirmLeaveTeam = () => {
+    setConfirmMessage(t.home.confirmLeave)
+    setConfirmAction(() => { handleLeaveTeam(); setConfirmAction(null) })
   }
 
   const handleAcceptInvite = async (invite: ApiInvite) => {
@@ -372,6 +435,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   }
 
   return (
+    <>
     <div className="h-full flex flex-col">
       <StatusBar />
       <div className="flex-1 overflow-y-auto px-4 pb-[90px] scrollable">
@@ -748,11 +812,11 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                       </div>
                     </div>
                     {team.createdBy === session.id ? (
-                      <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={confirmDeleteTeam} className="text-accent-red text-[11px] font-medium">
                         {t.home.deleteTeam ?? '解散团队'}
                       </motion.button>
                     ) : (
-                      <motion.button whileTap={{ scale: 0.95 }} onClick={handleLeaveTeam} className="text-accent-red text-[11px] font-medium">
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={confirmLeaveTeam} className="text-accent-red text-[11px] font-medium">
                         {t.home.leaveTeam ?? '退出队伍'}
                       </motion.button>
                     )}
@@ -769,7 +833,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                               <span className="text-white text-[13px] font-semibold">{run.date} · {run.time}</span>
                             </div>
                             {team.createdBy === session.id && (
-                              <button onClick={() => handleCancelRun(run.id)} className="text-accent-red text-[11px] font-medium">{t.home.cancelRun}</button>
+                              <button onClick={() => confirmCancelRun(run.id)} className="text-accent-red text-[11px] font-medium">{t.home.cancelRun}</button>
                             )}
                           </div>
                           <div className="text-[#a0a0b8] text-[12px] mb-2">{run.location} · {t.home.inviteFrom(run.createdByName)}</div>
@@ -985,6 +1049,14 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
         </motion.div>
       )}
     </div>
+    {confirmAction && (
+      <ConfirmDialog
+        message={confirmMessage}
+        onConfirm={() => { const fn = confirmAction; setConfirmAction(null); fn() }}
+        onCancel={() => setConfirmAction(null)}
+      />
+    )}
+  </>
   )
 }
 
@@ -1003,9 +1075,10 @@ function RunPage({ session }: { session: Session }) {
   }
 
   if (!active) {
-    return (
-      <div className="h-full flex flex-col">
-        <StatusBar />
+return (
+    <>
+    <div className="h-full flex flex-col">
+      <StatusBar />
         <div className="flex-1 overflow-y-auto px-4 pb-[90px] scrollable">
           {/* Hero Map Preview */}
           <div className="relative rounded-3xl overflow-hidden mb-5 mt-2 h-52 bg-gradient-to-br from-smartrun-700 to-smartrun-600 border border-smartrun-500/40">
@@ -1076,6 +1149,7 @@ function RunPage({ session }: { session: Session }) {
           </motion.button>
         </div>
     </div>
+    </>
   )
 }
 
@@ -1860,6 +1934,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const inRun = false
 
+  const [logoutConfirm, setLogoutConfirm] = useState(false)
+
   const handleStartTraining = () => setTab('run')
 
   const handleAuth = (newToken: string, account: Session) => {
@@ -1872,6 +1948,7 @@ export default function App() {
     setToken(null)
     setSession(null)
     setTab('home')
+    setLogoutConfirm(false)
   }
 
   if (session === null || token === null) {
@@ -1885,9 +1962,16 @@ export default function App() {
         {tab === 'run' && <RunPage session={session} />}
         {tab === 'aicoach' && <AICoach />}
         {tab === 'robot' && <RobotPage />}
-        {tab === 'profile' && <Profile session={session} onLogout={handleLogout} />}
+        {tab === 'profile' && <Profile session={session} onLogout={() => setLogoutConfirm(true)} />}
       </PageWrap>
       <NavBar active={tab} onChange={setTab} hidden={inRun} />
+      {logoutConfirm && (
+        <ConfirmDialog
+          message="确定退出登录？"
+          onConfirm={handleLogout}
+          onCancel={() => setLogoutConfirm(false)}
+        />
+      )}
     </div>
   )
 }
