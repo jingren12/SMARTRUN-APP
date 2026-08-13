@@ -1,7 +1,7 @@
 // ─── API Client ──────────────────────────────────────────────
 // Communicates with the Hono+SQLite backend at API_BASE
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://smartrun-api.eos-run.workers.dev' : '')
 
 export interface ApiAccount {
   id: string
