@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
-import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun } from './api/client'
+import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam } from './api/client'
 import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
@@ -322,6 +322,12 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
 
   const handleDeleteTeam = async () => {
     await apiDisbandTeam(token)
+    setTeam(null)
+  }
+
+  const handleLeaveTeam = async () => {
+    if (!team) return
+    await apiLeaveTeam(token)
     setTeam(null)
   }
 
@@ -741,9 +747,15 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                         <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {team.members.length}</div>
                       </div>
                     </div>
-                    <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
-                      {t.home.deleteTeam ?? '解散团队'}
-                    </motion.button>
+                    {team.createdBy === session.id ? (
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
+                        {t.home.deleteTeam ?? '解散团队'}
+                      </motion.button>
+                    ) : (
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={handleLeaveTeam} className="text-accent-red text-[11px] font-medium">
+                        {t.home.leaveTeam ?? '退出队伍'}
+                      </motion.button>
+                    )}
                   </div>
 
                   {/* Scheduled runs */}

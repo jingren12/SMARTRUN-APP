@@ -67,6 +67,7 @@ export interface Translations {
     cancelCreate: string;
     createTeam: string;
     deleteTeam: string;
+    leaveTeam: string;
     sendInvites: string;
     pendingInvites: string;
     accept: string;
@@ -274,6 +275,7 @@ const zh: Translations = {
     cancelCreate: '取消',
     createTeam: '创建团队',
     deleteTeam: '解散团队',
+    leaveTeam: '退出队伍',
     sendInvites: '发送邀请',
     pendingInvites: '待处理邀请',
     accept: '接受',
@@ -500,6 +502,7 @@ const en: Translations = {
     cancelCreate: 'Cancel',
     createTeam: 'Create Team',
     deleteTeam: 'Delete Team',
+    leaveTeam: 'Leave Team',
     sendInvites: 'Send Invites',
     pendingInvites: 'Pending Invites',
     accept: 'Accept',

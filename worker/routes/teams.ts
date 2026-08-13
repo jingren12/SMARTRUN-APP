@@ -71,6 +71,44 @@ teamsRoutes.get('/', async (c) => {
   })
 })
 
+teamsRoutes.post('/leave', async (c) => {
+  const account = c.get('account')
+
+  const team = await c.env.DB
+    .prepare(
+      `SELECT t.id, t.name, t.created_by FROM teams t
+       JOIN team_members tm ON tm.team_id = t.id
+       WHERE tm.account_id = ? AND tm.status = 'accepted'
+       LIMIT 1`,
+    )
+    .bind(account.id)
+    .first<TeamRow>()
+
+  if (!team) return c.json({ ok: false, error: 'no_team' }, 404)
+  if (team.created_by === account.id) return c.json({ ok: false, error: 'creator_cannot_leave' }, 400)
+
+  await c.env.DB
+    .prepare('DELETE FROM team_members WHERE team_id = ? AND account_id = ?')
+    .bind(team.id, account.id)
+
+  const remaining = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM team_members WHERE team_id = ?')
+    .bind(team.id)
+    .first<{ cnt: number }>()
+
+  if (remaining && remaining.cnt === 0) {
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM run_rsvps WHERE run_id IN (SELECT id FROM scheduled_runs WHERE team_id = ?)').bind(team.id),
+      c.env.DB.prepare('DELETE FROM scheduled_runs WHERE team_id = ?').bind(team.id),
+      c.env.DB.prepare('DELETE FROM invites WHERE team_id = ?').bind(team.id),
+      c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind(team.id),
+      c.env.DB.prepare('DELETE FROM teams WHERE id = ?').bind(team.id),
+    ])
+  }
+
+  return c.json({ ok: true })
+})
+
 // DELETE /api/teams — disband (only creator)
 teamsRoutes.delete('/', async (c) => {
   const account = c.get('account')

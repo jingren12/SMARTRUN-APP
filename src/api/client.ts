@@ -153,3 +153,7 @@ export async function apiGetTeam(token: string) {
 export async function apiDisbandTeam(token: string) {
   return request<{ ok: boolean }>('DELETE', '/api/teams', undefined, token)
 }
+
+export async function apiLeaveTeam(token: string) {
+  return request<{ ok: boolean }>('POST', '/api/teams/leave', undefined, token)
+}
