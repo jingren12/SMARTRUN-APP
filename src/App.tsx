@@ -258,7 +258,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
       if (account) {
         const result = await apiSendInvite(token, account.id, teamName.trim())
         if (!result.ok) {
-          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : '发送邀请失败')
+          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : result.error === 'team_full' ? '队伍已满，最多30人' : '发送邀请失败')
           return
         }
       }
@@ -297,12 +297,13 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const handleInviteMembers = async () => {
     if (selectedMembers.length === 0) return
     if (!team) return
+    if (team.members.length >= 30) { setInviteError('队伍已满，最多30人'); return }
     for (const name of selectedMembers) {
       const account = otherAccounts.find(a => a.displayName === name)
       if (account) {
         const result = await apiSendInvite(token, account.id, team.name, team.id)
         if (!result.ok) {
-          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : '发送邀请失败')
+          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : result.error === 'team_full' ? '队伍已满，最多30人' : '发送邀请失败')
           return
         }
       }
@@ -629,29 +630,36 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                     </motion.button>
                   </div>
 
-                  {/* Available accounts (exclude already invited) */}
-                  {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).length > 0 ? (
-                    <div className="mb-3">
-                      <div className="text-[#a0a0b8] text-[11px] font-medium mb-1.5">{t.home.availableUsers ?? '可选成员'}</div>
-                      <div className="space-y-1">
-                        {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).map(a => (
-                          <label key={a.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#252540]/30 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedMembers.includes(a.displayName)}
-                              onChange={() => toggleMember(a.displayName)}
-                              className="w-4 h-4 rounded border-[#2a2a40] bg-[#252540] text-neon focus:ring-neon/30"
-                            />
-                            <div>
-                              <div className="text-white text-[13px] font-medium">{a.displayName}</div>
-                              <div className="text-[#6b6b8d] text-[11px]">{a.email}</div>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                  {/* Member limit check */}
+                  {team.members.length >= 30 ? (
+                    <div className="text-[#ff6b35] text-[12px] text-center py-3">队伍已满（最多30人）</div>
                   ) : (
-                    <div className="text-[#a0a0b8] text-[12px] text-center py-3">{t.home.noInvites ?? '暂无可邀请的成员'}</div>
+                    <>
+                      {/* Available accounts (exclude already invited) */}
+                      {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).length > 0 ? (
+                        <div className="mb-3">
+                          <div className="text-[#a0a0b8] text-[11px] font-medium mb-1.5">{t.home.availableUsers ?? '可选成员'}</div>
+                          <div className="space-y-1">
+                            {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).map(a => (
+                              <label key={a.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#252540]/30 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedMembers.includes(a.displayName)}
+                                  onChange={() => toggleMember(a.displayName)}
+                                  className="w-4 h-4 rounded border-[#2a2a40] bg-[#252540] text-neon focus:ring-neon/30"
+                                />
+                                <div>
+                                  <div className="text-white text-[13px] font-medium">{a.displayName}</div>
+                                  <div className="text-[#6b6b8d] text-[11px]">{a.email}</div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[#a0a0b8] text-[12px] text-center py-3">{t.home.noInvites ?? '暂无可邀请的成员'}</div>
+                      )}
+                    </>
                   )}
 
                   {/* Send button */}
@@ -696,7 +704,11 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
 
                   {/* Members list */}
                   <div className="space-y-1.5 mb-3">
-                    {team.members.map((m, i) => (
+                    {[...team.members].sort((a, b) => {
+    if (team.createdBy && a.userId === team.createdBy) return -1
+    if (team.createdBy && b.userId === team.createdBy) return 1
+    return 0
+  }).map((m, i) => (
                       <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
                           {m.name.charAt(0)}

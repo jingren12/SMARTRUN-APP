@@ -133,6 +133,15 @@ invitesRoutes.post('/', async (c) => {
     }
   }
 
+  // check member limit (max 30)
+  const countResult = await c.env.DB
+    .prepare('SELECT COUNT(*) AS cnt FROM team_members WHERE team_id = ?')
+    .bind(teamId)
+    .first<{ cnt: number }>()
+  if (countResult && countResult.cnt >= 30) {
+    return c.json({ ok: false, error: 'team_full' }, 409)
+  }
+
   // add target as pending member
   await c.env.DB
     .prepare('INSERT OR IGNORE INTO team_members (team_id, account_id, status) VALUES (?, ?, ?)')
