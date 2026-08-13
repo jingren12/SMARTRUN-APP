@@ -73,7 +73,7 @@ invitesRoutes.get('/', async (c) => {
 // POST /api/invites — send invite
 invitesRoutes.post('/', async (c) => {
   const account = c.get('account')
-  const { toAccountId, teamName } = await c.req.json<{ toAccountId?: string; teamName?: string }>()
+  const { toAccountId, teamName, teamId: reqTeamId } = await c.req.json<{ toAccountId?: string; teamName?: string; teamId?: string }>()
   if (!toAccountId || !teamName) return c.json({ ok: false, error: 'missing_fields' }, 400)
 
   // check target exists
@@ -83,37 +83,54 @@ invitesRoutes.post('/', async (c) => {
     .first<{ id: string }>()
   if (!target) return c.json({ ok: false, error: 'user_not_found' }, 404)
 
-  // check not already on same team (accepted)
-  const existing = await c.env.DB
-    .prepare(
-      `SELECT tm.status FROM team_members tm JOIN teams t ON tm.team_id = t.id
-       WHERE tm.account_id = ? AND t.created_by = ? AND tm.status = 'accepted'`,
-    )
-    .bind(toAccountId, account.id)
-    .first<{ status: string }>()
-  if (existing) return c.json({ ok: false, error: 'already_on_team' }, 409)
-
-  // find or create team
-  let team = await c.env.DB
-    .prepare('SELECT id, name, created_by FROM teams WHERE created_by = ? AND name = ?')
-    .bind(account.id, teamName)
-    .first<TeamRow>()
-
   let teamId: string
-  if (!team) {
-    teamId = crypto.randomUUID()
-    const now = new Date().toISOString()
-    await c.env.DB
-      .prepare('INSERT INTO teams (id, name, created_by, created_at) VALUES (?, ?, ?, ?)')
-      .bind(teamId, teamName, account.id, now)
-      .run()
-    // add creator as accepted member
-    await c.env.DB
-      .prepare('INSERT OR IGNORE INTO team_members (team_id, account_id, status) VALUES (?, ?, ?)')
-      .bind(teamId, account.id, 'accepted')
-      .run()
+
+  if (reqTeamId) {
+    // verify inviter is a member of this team
+    const member = await c.env.DB
+      .prepare('SELECT account_id FROM team_members WHERE team_id = ? AND account_id = ?')
+      .bind(reqTeamId, account.id)
+      .first<{ account_id: string }>()
+    if (!member) return c.json({ ok: false, error: 'not_team_member' }, 403)
+
+    teamId = reqTeamId
+
+    // check target not already on this team
+    const existingOnTeam = await c.env.DB
+      .prepare('SELECT account_id FROM team_members WHERE team_id = ? AND account_id = ?')
+      .bind(teamId, toAccountId)
+      .first<{ account_id: string }>()
+    if (existingOnTeam) return c.json({ ok: false, error: 'already_on_team' }, 409)
   } else {
-    teamId = team.id
+    // legacy path: find or create team by created_by + name
+    const existing = await c.env.DB
+      .prepare(
+        `SELECT tm.status FROM team_members tm JOIN teams t ON tm.team_id = t.id
+         WHERE tm.account_id = ? AND t.created_by = ? AND tm.status = 'accepted'`,
+      )
+      .bind(toAccountId, account.id)
+      .first<{ status: string }>()
+    if (existing) return c.json({ ok: false, error: 'already_on_team' }, 409)
+
+    let team = await c.env.DB
+      .prepare('SELECT id, name, created_by FROM teams WHERE created_by = ? AND name = ?')
+      .bind(account.id, teamName)
+      .first<TeamRow>()
+
+    if (!team) {
+      teamId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      await c.env.DB
+        .prepare('INSERT INTO teams (id, name, created_by, created_at) VALUES (?, ?, ?, ?)')
+        .bind(teamId, teamName, account.id, now)
+        .run()
+      await c.env.DB
+        .prepare('INSERT OR IGNORE INTO team_members (team_id, account_id, status) VALUES (?, ?, ?)')
+        .bind(teamId, account.id, 'accepted')
+        .run()
+    } else {
+      teamId = team.id
+    }
   }
 
   // add target as pending member
@@ -172,6 +189,7 @@ invitesRoutes.post('/:id/accept', async (c) => {
   return c.json({
     ok: true,
     team: {
+      id: team.id,
       name: team.name,
       createdBy: team.created_by,
       members: membersResult.results.map((m) => ({

@@ -57,6 +57,7 @@ teamsRoutes.get('/', async (c) => {
   return c.json({
     ok: true,
     team: {
+      id: team.id,
       name: team.name,
       createdBy: team.created_by,
       members: membersResult.results.map((m) => ({
