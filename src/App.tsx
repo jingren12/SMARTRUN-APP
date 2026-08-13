@@ -483,126 +483,6 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
           {/* Decorative glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-neon/5 rounded-full blur-3xl" />
         </motion.button>
-
-        {/* Today's Plan Detail */}
-        <SectionH title={t.home.todayPlan} />
-        <GlassCard className="p-4 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <span className="text-white text-[15px] font-semibold">{t.home.planTitles[todayPlan.title] ?? todayPlan.title}</span>
-            </div>
-            <Badge color={todayPlan.intensity === 'easy' ? '#00ff88' : todayPlan.intensity === 'moderate' ? '#ffd60a' : '#ff6b35'}>{t.home.intensity[todayPlan.intensity as 'easy' | 'moderate' | 'hard']}</Badge>
-          </div>
-          <p className="text-[#a0a0b8] text-[13px] leading-relaxed mb-3">{t.home.planDescriptions[todayPlan.description] ?? todayPlan.description}</p>
-          <div className="stats-grid mb-3">
-            {[
-              { label: t.home.stats.distance, value: todayPlan.distance, unit: t.units.km },
-              { label: t.home.stats.duration, value: todayPlan.duration, unit: t.units.min },
-              { label: t.home.stats.calories, value: todayPlan.calories, unit: t.units.kcal },
-              { label: t.home.stats.pace, value: '5:20', unit: t.units.perKm },
-            ].map(s => (
-              <div key={s.label} className="bg-[#252540]/50 rounded-xl p-2.5 text-center">
-                <div className="text-white text-lg font-bold">{s.value}</div>
-                <div className="text-[#6b6b8d] text-[10px]">{s.label}</div>
-              </div>
-            ))}
-          </div>
-          {/* Segments */}
-          <div className="space-y-1.5">
-            {todayPlan.segments.map((seg, i) => (
-              <div key={i} className="flex items-center gap-3 bg-[#252540]/30 rounded-xl px-3 py-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${seg.type === 'warmup' ? 'bg-accent-blue/20 text-accent-blue' : seg.type === 'run' ? 'bg-neon/20 text-neon' : seg.type === 'sprint' ? 'bg-accent-orange/20 text-accent-orange' : 'bg-accent-purple/20 text-accent-purple'}`}>
-                  {t.segments[seg.type as 'warmup' | 'run' | 'sprint' | 'cooldown']}
-                </div>
-                <div className="flex-1">
-                  <div className="text-white text-[13px] font-medium">{t.home.segmentNotes[seg.note] ?? seg.note}</div>
-                  <div className="text-[#6b6b8d] text-[11px]">{seg.duration}{t.units.min} · {seg.pace}{t.units.perKm}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-
-        {/* Recovery + AI Coach */}
-        <SectionH title={t.home.trainingStatus} />
-        <div className="flex gap-3 mb-5">
-          <GlassCard className="flex-1 p-4">
-            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.recoveryIndex}</div>
-            <ProgressRing pct={recoveryScore} size={72} color="#00ff88">
-              <div className="text-center">
-                <div className="text-white text-lg font-bold">{recoveryScore}</div>
-                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
-              </div>
-            </ProgressRing>
-            <div className="text-center mt-2">
-              <div className="text-neon text-[11px] font-medium">{t.home.recoveryGood}</div>
-              <div className="text-[#6b6b8d] text-[10px]">{t.home.recoverySuggestion}</div>
-            </div>
-          </GlassCard>
-          <GlassCard className="flex-1 p-4">
-            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.fatigueLevel}</div>
-            <ProgressRing pct={35} size={72} color="#4a9eff">
-              <div className="text-center">
-                <div className="text-white text-lg font-bold">35</div>
-                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
-              </div>
-            </ProgressRing>
-            <div className="text-center mt-2">
-              <div className="text-accent-blue text-[11px] font-medium">{t.home.fatigueLow}</div>
-              <div className="text-[#6b6b8d] text-[10px]">{t.home.fatigueSuggestion}</div>
-            </div>
-          </GlassCard>
-        </div>
-
-        {/* Weekly Streak */}
-        <SectionH title={t.home.thisWeek} />
-        <GlassCard className="p-4 mb-5">
-          <div className="flex items-center justify-around mb-2">
-            {weekDays.map((d, i) => (
-              <div key={d} className="flex flex-col items-center gap-1">
-                <span className="text-[10px] text-[#6b6b8d]">{d}</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i <= todayIdx ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#4a4a6a]'}`}>
-                  {i <= todayIdx ? '✓' : '—'}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-2 pt-3 border-t border-[#2a2a40]/50">
-            <span className="text-2xl">🔥</span>
-            <div>
-              <div className="text-white text-[15px] font-bold">{t.home.daysStreak(streakDays)}</div>
-              <div className="text-[#6b6b8d] text-[11px]">{t.home.keepGoing}</div>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Recent Runs */}
-        <SectionH title={t.home.recentRuns} action={showAllRuns ? t.home.viewLess : t.home.viewAll} onAction={() => setShowAllRuns(prev => !prev)} />
-        <div className="space-y-2 mb-5">
-          {(showAllRuns ? recentRuns : recentRuns.slice(0, 3)).map(r => (
-            <GlassCard key={r.id} onClick={() => {}} className="p-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 21l3-7 4 2 3-6 3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-[14px] font-semibold">{t.routes[r.routeName] ?? r.routeName}</span>
-                  <span className="text-[#6b6b8d] text-[11px]">{r.date}</span>
-                </div>
-                <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-[12px] text-[#a0a0b8]">{r.distance}{t.units.km}</span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
-                  <span className="text-[12px] text-[#a0a0b8]">{r.pace}{t.units.perKm}</span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
-                  <span className="text-[12px] text-[#a0a0b8]">{r.duration}{t.units.min}</span>
-                </div>
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#4a4a6a]"><polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-            </GlassCard>
-          ))}
-        </div>
-
         {/* Party / Team */}
         <SectionH title={t.home.party} />
 
@@ -971,6 +851,126 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
             )}
           </GlassCard>
         </motion.div>
+
+        {/* Today's Plan Detail */}
+        <SectionH title={t.home.todayPlan} />
+        <GlassCard className="p-4 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <span className="text-white text-[15px] font-semibold">{t.home.planTitles[todayPlan.title] ?? todayPlan.title}</span>
+            </div>
+            <Badge color={todayPlan.intensity === 'easy' ? '#00ff88' : todayPlan.intensity === 'moderate' ? '#ffd60a' : '#ff6b35'}>{t.home.intensity[todayPlan.intensity as 'easy' | 'moderate' | 'hard']}</Badge>
+          </div>
+          <p className="text-[#a0a0b8] text-[13px] leading-relaxed mb-3">{t.home.planDescriptions[todayPlan.description] ?? todayPlan.description}</p>
+          <div className="stats-grid mb-3">
+            {[
+              { label: t.home.stats.distance, value: todayPlan.distance, unit: t.units.km },
+              { label: t.home.stats.duration, value: todayPlan.duration, unit: t.units.min },
+              { label: t.home.stats.calories, value: todayPlan.calories, unit: t.units.kcal },
+              { label: t.home.stats.pace, value: '5:20', unit: t.units.perKm },
+            ].map(s => (
+              <div key={s.label} className="bg-[#252540]/50 rounded-xl p-2.5 text-center">
+                <div className="text-white text-lg font-bold">{s.value}</div>
+                <div className="text-[#6b6b8d] text-[10px]">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Segments */}
+          <div className="space-y-1.5">
+            {todayPlan.segments.map((seg, i) => (
+              <div key={i} className="flex items-center gap-3 bg-[#252540]/30 rounded-xl px-3 py-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${seg.type === 'warmup' ? 'bg-accent-blue/20 text-accent-blue' : seg.type === 'run' ? 'bg-neon/20 text-neon' : seg.type === 'sprint' ? 'bg-accent-orange/20 text-accent-orange' : 'bg-accent-purple/20 text-accent-purple'}`}>
+                  {t.segments[seg.type as 'warmup' | 'run' | 'sprint' | 'cooldown']}
+                </div>
+                <div className="flex-1">
+                  <div className="text-white text-[13px] font-medium">{t.home.segmentNotes[seg.note] ?? seg.note}</div>
+                  <div className="text-[#6b6b8d] text-[11px]">{seg.duration}{t.units.min} · {seg.pace}{t.units.perKm}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+
+        {/* Recovery + AI Coach */}
+        <SectionH title={t.home.trainingStatus} />
+        <div className="flex gap-3 mb-5">
+          <GlassCard className="flex-1 p-4">
+            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.recoveryIndex}</div>
+            <ProgressRing pct={recoveryScore} size={72} color="#00ff88">
+              <div className="text-center">
+                <div className="text-white text-lg font-bold">{recoveryScore}</div>
+                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
+              </div>
+            </ProgressRing>
+            <div className="text-center mt-2">
+              <div className="text-neon text-[11px] font-medium">{t.home.recoveryGood}</div>
+              <div className="text-[#6b6b8d] text-[10px]">{t.home.recoverySuggestion}</div>
+            </div>
+          </GlassCard>
+          <GlassCard className="flex-1 p-4">
+            <div className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-2">{t.home.fatigueLevel}</div>
+            <ProgressRing pct={35} size={72} color="#4a9eff">
+              <div className="text-center">
+                <div className="text-white text-lg font-bold">35</div>
+                <div className="text-[#6b6b8d] text-[9px]">{t.home.outOf}</div>
+              </div>
+            </ProgressRing>
+            <div className="text-center mt-2">
+              <div className="text-accent-blue text-[11px] font-medium">{t.home.fatigueLow}</div>
+              <div className="text-[#6b6b8d] text-[10px]">{t.home.fatigueSuggestion}</div>
+            </div>
+          </GlassCard>
+        </div>
+
+        {/* Weekly Streak */}
+        <SectionH title={t.home.thisWeek} />
+        <GlassCard className="p-4 mb-5">
+          <div className="flex items-center justify-around mb-2">
+            {weekDays.map((d, i) => (
+              <div key={d} className="flex flex-col items-center gap-1">
+                <span className="text-[10px] text-[#6b6b8d]">{d}</span>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i <= todayIdx ? 'bg-neon/20 text-neon' : 'bg-[#252540]/50 text-[#4a4a6a]'}`}>
+                  {i <= todayIdx ? '✓' : '—'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center gap-2 mt-2 pt-3 border-t border-[#2a2a40]/50">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <div className="text-white text-[15px] font-bold">{t.home.daysStreak(streakDays)}</div>
+              <div className="text-[#6b6b8d] text-[11px]">{t.home.keepGoing}</div>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Recent Runs */}
+        <SectionH title={t.home.recentRuns} action={showAllRuns ? t.home.viewLess : t.home.viewAll} onAction={() => setShowAllRuns(prev => !prev)} />
+        <div className="space-y-2 mb-5">
+          {(showAllRuns ? recentRuns : recentRuns.slice(0, 3)).map(r => (
+            <GlassCard key={r.id} onClick={() => {}} className="p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-neon"><circle cx="12" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 21l3-7 4 2 3-6 3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-[14px] font-semibold">{t.routes[r.routeName] ?? r.routeName}</span>
+                  <span className="text-[#6b6b8d] text-[11px]">{r.date}</span>
+                </div>
+                <div className="flex items-center gap-3 mt-0.5">
+                  <span className="text-[12px] text-[#a0a0b8]">{r.distance}{t.units.km}</span>
+                  <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
+                  <span className="text-[12px] text-[#a0a0b8]">{r.pace}{t.units.perKm}</span>
+                  <span className="w-0.5 h-0.5 rounded-full bg-[#4a4a6a]" />
+                  <span className="text-[12px] text-[#a0a0b8]">{r.duration}{t.units.min}</span>
+                </div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#4a4a6a]"><polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </GlassCard>
+          ))}
+        </div>
+
 
         {/* AI Suggestion */}
         <GlassCard className="p-4 mb-6">
