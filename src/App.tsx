@@ -1213,31 +1213,34 @@ function RunPage({ session, token }: { session: Session; token: string }) {
   const [endResults, setEndResults] = useState<AmapGeocodeResult[]>([])
   const [searchingStart, setSearchingStart] = useState(false)
   const [searchingEnd, setSearchingEnd] = useState(false)
+  const [pickedStart, setPickedStart] = useState(false)
+  const [pickedEnd, setPickedEnd] = useState(false)
 
   useEffect(() => {
     const q = startQuery.trim()
-    if (!q) { setStartResults([]); setSearchingStart(false); return }
+    if (!q || pickedStart) { setStartResults([]); setSearchingStart(false); return }
     setSearchingStart(true)
     const timer = setTimeout(() => {
       amapGeocode(token, q).then(r => { setStartResults(r.ok ? r.data.results : []); setSearchingStart(false) })
     }, 200)
     return () => clearTimeout(timer)
-  }, [startQuery, token])
+  }, [startQuery, token, pickedStart])
 
   useEffect(() => {
     const q = endQuery.trim()
-    if (!q) { setEndResults([]); setSearchingEnd(false); return }
+    if (!q || pickedEnd) { setEndResults([]); setSearchingEnd(false); return }
     setSearchingEnd(true)
     const timer = setTimeout(() => {
       amapGeocode(token, q).then(r => { setEndResults(r.ok ? r.data.results : []); setSearchingEnd(false) })
     }, 200)
     return () => clearTimeout(timer)
-  }, [endQuery, token])
+  }, [endQuery, token, pickedEnd])
 
   const pickStart = (p: AmapGeocodeResult) => {
     setStart({ id: p.id, label: p.label, lat: p.lat, lng: p.lng })
     setStartQuery(p.label)
     setStartResults([])
+    setPickedStart(true)
     setRouteError(null)
     setEndHint(false)
   }
@@ -1247,6 +1250,7 @@ function RunPage({ session, token }: { session: Session; token: string }) {
     setEnd({ id: p.id, label: p.label, lat: p.lat, lng: p.lng })
     setEndQuery(p.label)
     setEndResults([])
+    setPickedEnd(true)
     setRouteError(null)
     setEndHint(false)
   }
@@ -1303,13 +1307,13 @@ return (
                 <input
                   type="text"
                   value={startQuery}
-                  onChange={e => setStartQuery(e.target.value)}
+                  onChange={e => { setStartQuery(e.target.value); setPickedStart(false) }}
                   placeholder={t.run.addressPlaceholder}
                   className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
                 />
                 {searchingStart && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
-              {startQuery.trim() !== '' && startResults.length > 0 && (
+              {startQuery.trim() !== '' && !pickedStart && startResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-64 overflow-y-auto scrollable">
                   {startResults.map(r => (
                     <button
@@ -1322,7 +1326,7 @@ return (
                   ))}
                 </div>
               )}
-              {startQuery.trim() !== '' && !searchingStart && startResults.length === 0 && (
+              {startQuery.trim() !== '' && !pickedStart && !searchingStart && startResults.length === 0 && (
                 <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
               )}
             </div>
@@ -1337,13 +1341,13 @@ return (
                 <input
                   type="text"
                   value={endQuery}
-                  onChange={e => setEndQuery(e.target.value)}
+                  onChange={e => { setEndQuery(e.target.value); setPickedEnd(false) }}
                   placeholder={t.run.addressPlaceholder}
                   className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
                 />
                 {searchingEnd && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
-              {endQuery.trim() !== '' && endResults.length > 0 && (
+              {endQuery.trim() !== '' && !pickedEnd && endResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-64 overflow-y-auto scrollable">
                   {endResults.map(r => (
                     <button
@@ -1356,7 +1360,7 @@ return (
                   ))}
                 </div>
               )}
-              {endQuery.trim() !== '' && !searchingEnd && endResults.length === 0 && (
+              {endQuery.trim() !== '' && !pickedEnd && !searchingEnd && endResults.length === 0 && (
                 <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
               )}
             </div>
