@@ -206,6 +206,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const [invites, setInvites] = useState<ApiInvite[]>([])
   const [showSentFeedback, setShowSentFeedback] = useState(false)
   const [inviteError, setInviteError] = useState('')
+  const [showInviteForm, setShowInviteForm] = useState(false)
 
   const refreshInvites = useCallback(() => {
     apiGetInvites(token).then(r => {
@@ -291,6 +292,25 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const handleDeclineInvite = async (invite: ApiInvite) => {
     await apiDeclineInvite(token, invite.id)
     refreshInvites()
+  }
+
+  const handleInviteMembers = async () => {
+    if (selectedMembers.length === 0) return
+    if (!team) return
+    for (const name of selectedMembers) {
+      const account = otherAccounts.find(a => a.displayName === name)
+      if (account) {
+        const result = await apiSendInvite(token, account.id, team.name)
+        if (!result.ok) {
+          setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : '发送邀请失败')
+          return
+        }
+      }
+    }
+    setShowInviteForm(false)
+    setShowSentFeedback(true)
+    setTimeout(() => setShowSentFeedback(false), 3000)
+    setSelectedMembers([])
   }
 
   const toggleMember = (name: string) => {
@@ -591,71 +611,146 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                 </div>
               </>
             ) : team ? (
-              <>
-                {/* ── Existing Team Display ── */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              showInviteForm ? (
+                <>
+                  {/* ── Invite Friends Form ── */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      </div>
+                      <div>
+                        <div className="text-white text-[15px] font-semibold leading-tight">{team.name}</div>
+                        <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {team.members.length}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-white text-[15px] font-semibold leading-tight">{team.name}</div>
-                      <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {team.members.length}</div>
-                    </div>
+                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowInviteForm(false)} className="text-[#a0a0b8] text-[11px] font-medium">
+                      {t.home.cancelCreate ?? '取消'}
+                    </motion.button>
                   </div>
-                  <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
-                    {t.home.deleteTeam ?? '解散团队'}
-                  </motion.button>
-                </div>
 
-                {/* Members list */}
-                <div className="space-y-1.5 mb-3">
-                  {team.members.map((m, i) => (
-                    <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
-                        {m.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-white text-[13px] font-medium truncate">{m.name}</span>
-                          {team.createdBy && m.userId === team.createdBy && (
-                            <Badge color="#00ff88" className="!px-1.5 !py-0 text-[9px]">{t.home.captain}</Badge>
-                          )}
-                          {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.id)) && (
-                            <Badge color="#ff6b35" className="!px-1.5 !py-0 text-[9px]">{t.home.pendingStatus}</Badge>
-                          )}
-                        </div>
-                        <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
-                        <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+                  {/* Available accounts (exclude already invited) */}
+                  {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).length > 0 ? (
+                    <div className="mb-3">
+                      <div className="text-[#a0a0b8] text-[11px] font-medium mb-1.5">{t.home.availableUsers ?? '可选成员'}</div>
+                      <div className="space-y-1">
+                        {otherAccounts.filter(a => !team.members.some(m => m.userId === a.id)).map(a => (
+                          <label key={a.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#252540]/30 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedMembers.includes(a.displayName)}
+                              onChange={() => toggleMember(a.displayName)}
+                              className="w-4 h-4 rounded border-[#2a2a40] bg-[#252540] text-neon focus:ring-neon/30"
+                            />
+                            <div>
+                              <div className="text-white text-[13px] font-medium">{a.displayName}</div>
+                              <div className="text-[#6b6b8d] text-[11px]">{a.email}</div>
+                            </div>
+                          </label>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div className="text-[#a0a0b8] text-[12px] text-center py-3">{t.home.noInvites ?? '暂无可邀请的成员'}</div>
+                  )}
 
-                {/* Action buttons */}
-                <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    {t.home.shareStats}
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {t.home.scheduleRun}
-                  </motion.button>
-                </div>
+                  {/* Send button */}
+                  <div className="flex gap-2 pt-2 border-t border-[#2a2a40]/50">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setShowInviteForm(false)}
+                      className="flex-1 rounded-xl bg-[#252540]/50 text-[#a0a0b8] py-2.5 text-[13px] font-semibold"
+                    >
+                      {t.home.cancelCreate ?? '取消'}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleInviteMembers}
+                      disabled={selectedMembers.length === 0}
+                      className="flex-1 rounded-xl bg-neon/20 border border-neon/30 text-neon py-2.5 text-[13px] font-semibold disabled:opacity-40"
+                    >
+                      {t.home.sendInvites}
+                    </motion.button>
+                  </div>
+                  {inviteError && (
+                    <p className="text-accent-red text-[12px] mt-2 text-center" role="alert">{inviteError}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* ── Existing Team Display ── */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-accent-purple/20 flex items-center justify-center">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 18c.2-2 1.8-3.5 4-3.5 1.7 0 3 1 3 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      </div>
+                      <div>
+                        <div className="text-white text-[15px] font-semibold leading-tight">{team.name}</div>
+                        <div className="text-[#6b6b8d] text-[11px] mt-0.5">{t.home.partyMembers} · {team.members.length}</div>
+                      </div>
+                    </div>
+                    <motion.button whileTap={{ scale: 0.95 }} onClick={handleDeleteTeam} className="text-accent-red text-[11px] font-medium">
+                      {t.home.deleteTeam ?? '解散团队'}
+                    </motion.button>
+                  </div>
 
-                {/* Invite hint */}
-                <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
-              </>
+                  {/* Members list */}
+                  <div className="space-y-1.5 mb-3">
+                    {team.members.map((m, i) => (
+                      <div key={m.name} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${i % 2 === 0 ? 'bg-[#252540]/30' : 'bg-transparent'}`}>
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+                          {m.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-white text-[13px] font-medium truncate">{m.name}</span>
+                            {team.createdBy && m.userId === team.createdBy && (
+                              <Badge color="#00ff88" className="!px-1.5 !py-0 text-[9px]">{t.home.captain}</Badge>
+                            )}
+                            {(m.status === 'pending' || (!m.status && m.userId && m.userId !== session.id)) && (
+                              <Badge color="#ff6b35" className="!px-1.5 !py-0 text-[9px]">{t.home.pendingStatus}</Badge>
+                            )}
+                          </div>
+                          <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
+                          <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      {t.home.shareStats}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      {t.home.scheduleRun}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => { setShowInviteForm(true); setSelectedMembers([]); setInviteError('') }}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-purple/10 border border-accent-purple/20 text-accent-purple py-2.5 text-[12px] font-semibold"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="1.5"/><line x1="23" y1="11" x2="23" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="20" y1="14" x2="26" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      {t.home.inviteFriends}
+                    </motion.button>
+                  </div>
+
+                  {/* Invite hint */}
+                  <div className="text-center text-[#6b6b8d] text-[11px] mt-3">{t.home.inviteHint}</div>
+                </>
+              )
             ) : teamLoading ? (
               <div className="text-center py-6">
                 <div className="text-[#6b6b8d] text-[12px]">…</div>

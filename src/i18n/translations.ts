@@ -59,6 +59,7 @@ export interface Translations {
     noPartyYet: string;
     noPartyHint: string;
     inviteHint: string;
+    inviteFriends: string;
     createTeamName: string;
     availableUsers: string;
     addMember: string;
@@ -252,6 +253,7 @@ const zh: Translations = {
     noPartyYet: '还没有团队',
     noPartyHint: '创建一个团队，和朋友一起跑！',
     inviteHint: '邀请好友加入团队',
+    inviteFriends: '邀请好友',
     createTeamName: '团队名称',
     availableUsers: '可选成员',
     addMember: '添加成员',
@@ -465,6 +467,7 @@ const en: Translations = {
     noPartyYet: 'No Team Yet',
     noPartyHint: 'Create a team and run with friends!',
     inviteHint: 'Invite friends to join',
+    inviteFriends: 'Invite Friends',
     createTeamName: 'Team Name',
     availableUsers: 'Available Users',
     addMember: 'Add Member',
