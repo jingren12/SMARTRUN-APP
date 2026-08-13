@@ -10,6 +10,7 @@ export interface TeamMember {
 }
 
 export interface TeamData {
+  readonly id: string
   readonly name: string
   readonly createdBy?: string
   readonly members: readonly TeamMember[]

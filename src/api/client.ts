@@ -28,6 +28,7 @@ export interface ApiTeamMember {
 }
 
 export interface ApiTeam {
+  id: string
   name: string
   createdBy?: string
   members: ApiTeamMember[]
@@ -87,8 +88,8 @@ export async function apiGetInvites(token: string) {
   return request<{ invites: ApiInvite[] }>('GET', '/api/invites', undefined, token)
 }
 
-export async function apiSendInvite(token: string, toAccountId: string, teamName: string) {
-  return request<{ invite: { id: string; teamId: string } }>('POST', '/api/invites', { toAccountId, teamName }, token)
+export async function apiSendInvite(token: string, toAccountId: string, teamName: string, teamId?: string) {
+  return request<{ invite: { id: string; teamId: string } }>('POST', '/api/invites', { toAccountId, teamName, teamId }, token)
 }
 
 export async function apiAcceptInvite(token: string, inviteId: string) {

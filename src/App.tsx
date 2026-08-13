@@ -300,7 +300,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
     for (const name of selectedMembers) {
       const account = otherAccounts.find(a => a.displayName === name)
       if (account) {
-        const result = await apiSendInvite(token, account.id, team.name)
+        const result = await apiSendInvite(token, account.id, team.name, team.id)
         if (!result.ok) {
           setInviteError(result.error === 'already_on_team' ? `"${name}" 已在队伍中` : '发送邀请失败')
           return
