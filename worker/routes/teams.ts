@@ -82,8 +82,9 @@ teamsRoutes.delete('/', async (c) => {
 
   if (!team) return c.json({ ok: false, error: 'no_team' }, 404)
 
-  // D1 batch: delete invites, members, and team atomically
   await c.env.DB.batch([
+    c.env.DB.prepare('DELETE FROM run_rsvps WHERE run_id IN (SELECT id FROM scheduled_runs WHERE team_id = ?)').bind(team.id),
+    c.env.DB.prepare('DELETE FROM scheduled_runs WHERE team_id = ?').bind(team.id),
     c.env.DB.prepare('DELETE FROM invites WHERE team_id = ?').bind(team.id),
     c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind(team.id),
     c.env.DB.prepare('DELETE FROM teams WHERE id = ?').bind(team.id),

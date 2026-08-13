@@ -4,6 +4,7 @@ import { authRoutes } from './routes/auth'
 import { accountsRoutes } from './routes/accounts'
 import { invitesRoutes } from './routes/invites'
 import { teamsRoutes } from './routes/teams'
+import { scheduledRunsRoutes } from './routes/scheduled-runs'
 import { initSchema } from './db'
 
 export type Bindings = {
@@ -28,6 +29,7 @@ app.route('/api/auth', authRoutes)
 app.route('/api/accounts', accountsRoutes)
 app.route('/api/invites', invitesRoutes)
 app.route('/api/teams', teamsRoutes)
+app.route('/api/scheduled-runs', scheduledRunsRoutes)
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 
