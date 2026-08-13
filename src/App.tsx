@@ -1214,13 +1214,16 @@ function RunPage({ session, token }: { session: Session; token: string }) {
   const [searchingStart, setSearchingStart] = useState(false)
   const [searchingEnd, setSearchingEnd] = useState(false)
 
+  // Popular places shown as guesses before the user types anything.
+  const POPULAR_PLACES = ['外滩', '陆家嘴', '静安寺', '人民广场', '徐家汇', '南京西路']
+
   useEffect(() => {
     const q = startQuery.trim()
     if (!q) { setStartResults([]); setSearchingStart(false); return }
     setSearchingStart(true)
     const timer = setTimeout(() => {
       amapGeocode(token, q).then(r => { setStartResults(r.ok ? r.data.results : []); setSearchingStart(false) })
-    }, 400)
+    }, 200)
     return () => clearTimeout(timer)
   }, [startQuery, token])
 
@@ -1230,9 +1233,38 @@ function RunPage({ session, token }: { session: Session; token: string }) {
     setSearchingEnd(true)
     const timer = setTimeout(() => {
       amapGeocode(token, q).then(r => { setEndResults(r.ok ? r.data.results : []); setSearchingEnd(false) })
-    }, 400)
+    }, 200)
     return () => clearTimeout(timer)
   }, [endQuery, token])
+
+  const pickStart = (p: AmapGeocodeResult) => {
+    setStart({ id: p.id, label: p.label, lat: p.lat, lng: p.lng })
+    setStartQuery(p.label)
+    setStartResults([])
+    setRouteError(null)
+    setEndHint(false)
+  }
+
+  const pickEnd = (p: AmapGeocodeResult) => {
+    if (start && start.id === p.id) { setEndHint(true); return }
+    setEnd({ id: p.id, label: p.label, lat: p.lat, lng: p.lng })
+    setEndQuery(p.label)
+    setEndResults([])
+    setRouteError(null)
+    setEndHint(false)
+  }
+
+  const guessStart = (place: string) => {
+    setStartQuery(place)
+    setSearchingStart(true)
+    amapGeocode(token, place).then(r => { setStartResults(r.ok ? r.data.results : []); setSearchingStart(false) })
+  }
+
+  const guessEnd = (place: string) => {
+    setEndQuery(place)
+    setSearchingEnd(true)
+    amapGeocode(token, place).then(r => { setEndResults(r.ok ? r.data.results : []); setSearchingEnd(false) })
+  }
 
   const handleStart = () => {
     if (!start || !end || start.id === end.id) {
@@ -1292,12 +1324,26 @@ return (
                 />
                 {searchingStart && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
-              {startResults.length > 0 && (
+              {startQuery.trim() === '' && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
+                  <div className="px-3 pt-2.5 pb-1 text-[10px] text-[#6b6b8d] uppercase tracking-wide">{t.run.searching}</div>
+                  {POPULAR_PLACES.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => guessStart(p)}
+                      className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neon mr-2 shrink-0"><path d="M12 21s-7-5.1-7-11a7 7 0 0 1 14 0c0 5.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>{p}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {startQuery.trim() !== '' && startResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
                   {startResults.map(r => (
                     <button
                       key={r.id}
-                      onClick={() => { setStart({ id: r.id, label: r.label, lat: r.lat, lng: r.lng }); setStartQuery(r.label); setStartResults([]); setRouteError(null); setEndHint(false) }}
+                      onClick={() => pickStart(r)}
                       className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
                     >
                       {r.label}
@@ -1326,15 +1372,26 @@ return (
                 />
                 {searchingEnd && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
-              {endResults.length > 0 && (
+              {endQuery.trim() === '' && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
+                  <div className="px-3 pt-2.5 pb-1 text-[10px] text-[#6b6b8d] uppercase tracking-wide">{t.run.searching}</div>
+                  {POPULAR_PLACES.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => guessEnd(p)}
+                      className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neon mr-2 shrink-0"><path d="M12 21s-7-5.1-7-11a7 7 0 0 1 14 0c0 5.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>{p}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {endQuery.trim() !== '' && endResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
                   {endResults.map(r => (
                     <button
                       key={r.id}
-                      onClick={() => {
-                        if (start && start.id === r.id) { setEndHint(true); return }
-                        setEnd({ id: r.id, label: r.label, lat: r.lat, lng: r.lng }); setEndQuery(r.label); setEndResults([]); setRouteError(null); setEndHint(false)
-                      }}
+                      onClick={() => pickEnd(r)}
                       className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
                     >
                       {r.label}
