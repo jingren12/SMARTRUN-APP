@@ -92,6 +92,16 @@ teamsRoutes.post('/leave', async (c) => {
     .bind(team.id, account.id)
     .run()
 
+  // Auto-cancel scheduled runs created by this user
+  await c.env.DB
+    .prepare('DELETE FROM run_rsvps WHERE run_id IN (SELECT id FROM scheduled_runs WHERE created_by = ? AND team_id = ?)')
+    .bind(account.id, team.id)
+    .run()
+  await c.env.DB
+    .prepare('DELETE FROM scheduled_runs WHERE created_by = ? AND team_id = ?')
+    .bind(account.id, team.id)
+    .run()
+
   const remaining = await c.env.DB
     .prepare('SELECT COUNT(*) as cnt FROM team_members WHERE team_id = ?')
     .bind(team.id)

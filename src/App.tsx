@@ -834,7 +834,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-orange"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               <span className="text-white text-[13px] font-semibold">{run.date} · {run.time}</span>
                             </div>
-                            {team.createdBy === session.id && (
+                            {run.createdBy === session.id && (
                               <button onClick={() => confirmCancelRun(run.id)} className="text-accent-red text-[11px] font-medium">{t.home.cancelRun}</button>
                             )}
                           </div>
