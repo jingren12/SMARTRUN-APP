@@ -893,12 +893,22 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                               <Badge color="#ff6b35" className="!px-1.5 !py-0 text-[9px]">{t.home.pendingStatus}</Badge>
                             )}
                           </div>
-                          <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
+                          {(m as unknown as { statsShared?: boolean }).statsShared ? (
+                            <div className="text-[#a0a0b8] text-[11px] mt-0.5">{m.weeklyDist}{t.units.km} · {t.home.stats.distance}</div>
+                          ) : (
+                            <div className="text-[#6b6b8d] text-[11px] mt-0.5">—</div>
+                          )}
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
-                          <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
-                        </div>
+                        {(m as unknown as { statsShared?: boolean }).statsShared ? (
+                          <div className="text-right shrink-0">
+                            <div className="text-neon text-[13px] font-semibold font-mono">{m.avgPace}</div>
+                            <div className="text-[#6b6b8d] text-[10px]">{t.units.perKm}</div>
+                          </div>
+                        ) : (
+                          <div className="text-right shrink-0">
+                            <div className="text-[#6b6b8d] text-[13px] font-semibold font-mono">—</div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1057,14 +1067,14 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={() => setShowStatsOverlay(false)}
       >
         <motion.div
-          initial={{ y: 200, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="w-full max-w-[393px] rounded-t-3xl bg-[#1a1a2e] border-t border-[#2a2a40]/50 p-5 max-h-[80vh] overflow-y-auto"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          className="w-[340px] rounded-2xl bg-[#1a1a2e] border border-[#2a2a40]/50 p-5 shadow-2xl max-h-[80vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4">
