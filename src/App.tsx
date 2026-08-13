@@ -6,6 +6,8 @@ import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
 import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam, apiToggleStats, apiAskAi } from './api/client'
 import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
+import { MAPBOX_TOKEN, mapboxGeocode, mapboxDirections } from './api/mapbox'
+import type { GeocodeResult } from './api/mapbox'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 import type { TeamData } from './team/team'
@@ -1148,42 +1150,62 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
 
 // ─── Page: Run ────────────────────────────────────────────
 
-interface Place { id: string; lat: number; lng: number }
-const PLACES: Record<string, Place> = {
-  home: { id: 'home', lat: 31.2304, lng: 121.4737 },
-  company: { id: 'company', lat: 31.2397, lng: 121.4998 },
-  park: { id: 'park', lat: 31.2462, lng: 121.5045 },
-  lake: { id: 'lake', lat: 31.2186, lng: 121.5532 },
-  gym: { id: 'gym', lat: 31.1843, lng: 121.4388 },
-  school: { id: 'school', lat: 31.2001, lng: 121.4333 },
+interface RoutePoint { id: string; label: string; lat: number; lng: number }
+const PLACES: Record<string, RoutePoint> = {
+  home: { id: 'home', label: '家', lat: 31.2304, lng: 121.4737 },
+  company: { id: 'company', label: '公司', lat: 31.2397, lng: 121.4998 },
+  park: { id: 'park', label: '滨江公园', lat: 31.2462, lng: 121.5045 },
+  lake: { id: 'lake', label: '环湖绿道', lat: 31.2186, lng: 121.5532 },
+  gym: { id: 'gym', label: '体育中心', lat: 31.1843, lng: 121.4388 },
+  school: { id: 'school', label: '大学城', lat: 31.2001, lng: 121.4333 },
 }
 
-function RunMap({ startId, endId }: { startId: string; endId: string }) {
+function RunMap({ start, end }: { start: RoutePoint; end: RoutePoint }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
+  const routeRef = useRef<L.Polyline | null>(null)
   const [ready, setReady] = useState(false)
+
+  // Fetch the real road route once both points are known.
+  useEffect(() => {
+    let cancelled = false
+    if (!routeRef.current) return
+    mapboxDirections(start.lat, start.lng, end.lat, end.lng).then(route => {
+      if (cancelled || !route) return
+      const pts: L.LatLngExpression[] = route.coordinates
+      routeRef.current?.setLatLngs(pts)
+      mapRef.current?.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
+    })
+    return () => { cancelled = true }
+  }, [start, end])
+
   useEffect(() => {
     if (!ref.current || mapRef.current) return
-    const start = PLACES[startId]
-    const end = PLACES[endId]
-    if (!start || !end) return
     const map = L.map(ref.current, { zoomControl: false, attributionControl: true })
     mapRef.current = map
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
+    if (MAPBOX_TOKEN) {
+      L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`, {
+        maxZoom: 18,
+        attribution: '&copy; Mapbox &copy; OpenStreetMap',
+      }).addTo(map)
+    } else {
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map)
+    }
     const pts: L.LatLngExpression[] = [[start.lat, start.lng], [end.lat, end.lng]]
-    L.polyline(pts, { color: '#00ff88', weight: 4, opacity: 0.9, dashArray: '8 6' }).addTo(map)
-    L.circleMarker([start.lat, start.lng], { radius: 8, color: '#00ff88', fillColor: '#00ff88', fillOpacity: 1 }).addTo(map).bindPopup('Start')
-    L.circleMarker([end.lat, end.lng], { radius: 8, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1 }).addTo(map).bindPopup('Finish')
+    routeRef.current = L.polyline(pts, { color: '#00ff88', weight: 4, opacity: 0.9 }).addTo(map)
+    L.circleMarker([start.lat, start.lng], { radius: 8, color: '#00ff88', fillColor: '#00ff88', fillOpacity: 1 }).addTo(map).bindPopup(start.label)
+    L.circleMarker([end.lat, end.lng], { radius: 8, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1 }).addTo(map).bindPopup(end.label)
     map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
     setReady(true)
-    return () => { map.remove(); mapRef.current = null }
-  }, [startId, endId])
+    return () => { map.remove(); mapRef.current = null; routeRef.current = null }
+  }, [start, end])
+
   return (
     <div className="absolute inset-0 z-0">
-      <div ref={ref} className="absolute inset-0 leaflet-dark" />
+      <div ref={ref} className={`absolute inset-0 ${MAPBOX_TOKEN ? '' : 'leaflet-dark'}`} />
       {!ready && <div className="absolute inset-0 z-10 flex items-center justify-center"><span className="text-white/40 text-xs">Loading map…</span></div>}
     </div>
   )
@@ -1193,13 +1215,41 @@ function RunPage({ session }: { session: Session }) {
   const t = useT()
   const [active, setActive] = useState(false)
   const [xpFeedback, setXpFeedback] = useState<string | null>(null)
-  const [startId, setStartId] = useState<string | null>(null)
-  const [endId, setEndId] = useState<string | null>(null)
+  const [start, setStart] = useState<RoutePoint | null>(null)
+  const [end, setEnd] = useState<RoutePoint | null>(null)
   const [routeError, setRouteError] = useState<string | null>(null)
   const [endHint, setEndHint] = useState(false)
 
+  // Address search state (Mapbox geocoding)
+  const [startQuery, setStartQuery] = useState('')
+  const [endQuery, setEndQuery] = useState('')
+  const [startResults, setStartResults] = useState<GeocodeResult[]>([])
+  const [endResults, setEndResults] = useState<GeocodeResult[]>([])
+  const [searchingStart, setSearchingStart] = useState(false)
+  const [searchingEnd, setSearchingEnd] = useState(false)
+
+  useEffect(() => {
+    const q = startQuery.trim()
+    if (!q || !MAPBOX_TOKEN) { setStartResults([]); setSearchingStart(false); return }
+    setSearchingStart(true)
+    const timer = setTimeout(() => {
+      mapboxGeocode(q).then(r => { setStartResults(r); setSearchingStart(false) })
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [startQuery])
+
+  useEffect(() => {
+    const q = endQuery.trim()
+    if (!q || !MAPBOX_TOKEN) { setEndResults([]); setSearchingEnd(false); return }
+    setSearchingEnd(true)
+    const timer = setTimeout(() => {
+      mapboxGeocode(q).then(r => { setEndResults(r); setSearchingEnd(false) })
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [endQuery])
+
   const handleStart = () => {
-    if (!startId || !endId || startId === endId) {
+    if (!start || !end || start.id === end.id) {
       setRouteError(t.run.selectRouteFirst)
       return
     }
@@ -1240,33 +1290,92 @@ return (
 
           {/* Route Selection */}
           <SectionH title={t.run.chooseRoute} />
+
+          {/* Start point: search + quick picks */}
           <div className="mb-3">
             <div className="text-[#a0a0b8] text-[11px] mb-2">{t.run.selectStart}</div>
+            <div className="relative mb-2">
+              <div className="flex items-center gap-2 rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b6b8d] shrink-0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" strokeLinecap="round"/></svg>
+                <input
+                  type="text"
+                  value={startQuery}
+                  onChange={e => setStartQuery(e.target.value)}
+                  placeholder={t.run.addressPlaceholder}
+                  className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
+                />
+                {searchingStart && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
+              </div>
+              {startResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
+                  {startResults.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => { setStart({ id: r.id, label: r.label, lat: r.lat, lng: r.lng }); setStartQuery(r.label); setStartResults([]); setRouteError(null); setEndHint(false) }}
+                      className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
             <div className="flex gap-2 overflow-x-auto scrollable pb-1">
               {Object.keys(PLACES).map(id => (
                 <button
                   key={id}
-                  onClick={() => { setStartId(id); setRouteError(null); setEndHint(false) }}
-                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${startId === id ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
+                  onClick={() => { setStart(PLACES[id]); setStartQuery(PLACES[id].label); setRouteError(null); setEndHint(false) }}
+                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${start?.id === id ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
                 >
                   {t.run.places[id]}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* End point: search + quick picks */}
           <div className="mb-5">
             <div className="text-[#a0a0b8] text-[11px] mb-2">{t.run.selectEnd}</div>
+            <div className="relative mb-2">
+              <div className="flex items-center gap-2 rounded-xl bg-[#252540]/50 border border-[#2a2a40]/50 px-3 py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b6b8d] shrink-0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" strokeLinecap="round"/></svg>
+                <input
+                  type="text"
+                  value={endQuery}
+                  onChange={e => setEndQuery(e.target.value)}
+                  placeholder={t.run.addressPlaceholder}
+                  className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
+                />
+                {searchingEnd && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
+              </div>
+              {endResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto scrollable">
+                  {endResults.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        if (start && start.id === r.id) { setEndHint(true); return }
+                        setEnd({ id: r.id, label: r.label, lat: r.lat, lng: r.lng }); setEndQuery(r.label); setEndResults([]); setRouteError(null); setEndHint(false)
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-[#252540]/60 border-b border-[#2a2a40]/30 last:border-0"
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
             <div className="flex gap-2 overflow-x-auto scrollable pb-1">
               {Object.keys(PLACES).map(id => (
                 <button
                   key={id}
                   onClick={() => {
-                    if (startId && id === startId) { setEndHint(true); return }
-                    setEndId(id)
-                    setRouteError(null)
-                    setEndHint(false)
+                    if (start && start.id === id) { setEndHint(true); return }
+                    setEnd(PLACES[id]); setEndQuery(PLACES[id].label); setRouteError(null); setEndHint(false)
                   }}
-                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${endId === id ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
+                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${end?.id === id ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
                 >
                   {t.run.places[id]}
                 </button>
@@ -1344,7 +1453,7 @@ return (
 
       {/* Map area */}
       <div className="flex-1 relative">
-        {startId && endId && <RunMap startId={startId} endId={endId} />}
+        {start && end && <RunMap start={start} end={end} />}
 
         {/* Pace overlay */}
         <div className="absolute top-3 left-3 z-10 glass rounded-xl px-3 py-2">

@@ -137,6 +137,11 @@ export interface Translations {
     places: Record<string, string>;
     routeReady: string;
     selectRouteFirst: string;
+    searchAddress: string;
+    searching: string;
+    noResults: string;
+    quickPicks: string;
+    addressPlaceholder: string;
   };
 
   // ─── AI Coach Page ───
@@ -367,6 +372,11 @@ const zh: Translations = {
     places: { home: '家', company: '公司', park: '滨江公园', lake: '环湖绿道', gym: '体育中心', school: '大学城' },
     routeReady: '路线已就绪',
     selectRouteFirst: '请先选择起终点',
+    searchAddress: '搜索地址',
+    searching: '搜索中…',
+    noResults: '未找到匹配地址',
+    quickPicks: '快捷地点',
+    addressPlaceholder: '输入地址，如：南京西路',
   },
   aicoach: {
     title: 'AI 教练',
@@ -615,6 +625,11 @@ const en: Translations = {
     places: { home: 'Home', company: 'Office', park: 'Riverside Park', lake: 'Lake Loop', gym: 'Sports Center', school: 'University Town' },
     routeReady: 'Route ready',
     selectRouteFirst: 'Please pick start & finish',
+    searchAddress: 'Search address',
+    searching: 'Searching…',
+    noResults: 'No matching address found',
+    quickPicks: 'Quick picks',
+    addressPlaceholder: 'Enter an address, e.g. Nanjing Rd W',
   },
   aicoach: {
     title: 'AI Coach',
