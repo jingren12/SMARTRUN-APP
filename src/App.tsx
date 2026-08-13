@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
-import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam } from './api/client'
-import type { ApiAccount, ApiInvite } from './api/client'
+import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun } from './api/client'
+import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 import type { TeamData } from './team/team'
@@ -208,6 +208,48 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const [inviteError, setInviteError] = useState('')
   const [showInviteForm, setShowInviteForm] = useState(false)
 
+  const [scheduledRuns, setScheduledRuns] = useState<ApiScheduledRun[]>([])
+  const [showScheduleOverlay, setShowScheduleOverlay] = useState(false)
+  const [schedDate, setSchedDate] = useState('')
+  const [schedTime, setSchedTime] = useState('')
+  const [schedLocation, setSchedLocation] = useState('')
+  const [scheduleSubmitting, setScheduleSubmitting] = useState(false)
+  const [scheduleFormError, setScheduleFormError] = useState('')
+
+  const refreshScheduledRuns = useCallback(() => {
+    if (!team) { setScheduledRuns([]); return }
+    apiGetScheduledRuns(token, team.id).then(r => {
+      if (r.ok) setScheduledRuns(r.data.runs)
+    })
+  }, [token, team])
+
+  const handleConfirmSchedule = async () => {
+    if (!schedDate || !schedTime || !schedLocation.trim() || !team) return
+    setScheduleSubmitting(true)
+    const result = await apiCreateScheduledRun(token, team.id, schedDate, schedTime, schedLocation.trim())
+    if (result.ok) {
+      setShowScheduleOverlay(false)
+      setSchedDate('')
+      setSchedTime('')
+      setSchedLocation('')
+      setScheduleFormError('')
+      refreshScheduledRuns()
+    } else {
+      setScheduleFormError(result.error === 'not_team_member' ? '不是你所在的队伍' : t.home.scheduleError)
+    }
+    setScheduleSubmitting(false)
+  }
+
+  const handleRsvp = async (runId: string, status: 'going' | 'not_going') => {
+    const result = await apiSetRsvp(token, runId, status)
+    if (result.ok) refreshScheduledRuns()
+  }
+
+  const handleCancelRun = async (runId: string) => {
+    await apiCancelScheduledRun(token, runId)
+    refreshScheduledRuns()
+  }
+
   const refreshInvites = useCallback(() => {
     apiGetInvites(token).then(r => {
       if (r.ok) setInvites(r.data.invites)
@@ -223,6 +265,8 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   }, [token])
 
   useEffect(() => { refreshInvites() }, [refreshInvites])
+
+  useEffect(() => { refreshScheduledRuns() }, [refreshScheduledRuns])
 
   const [creating, setCreating] = useState(false)
   const [teamName, setTeamName] = useState('')
@@ -702,6 +746,53 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                     </motion.button>
                   </div>
 
+                  {/* Scheduled runs */}
+                  {scheduledRuns.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {scheduledRuns.map(run => (
+                        <div key={run.id} className="rounded-xl bg-accent-orange/10 border border-accent-orange/20 p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-orange"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <span className="text-white text-[13px] font-semibold">{run.date} · {run.time}</span>
+                            </div>
+                            {team.createdBy === session.id && (
+                              <button onClick={() => handleCancelRun(run.id)} className="text-accent-red text-[11px] font-medium">{t.home.cancelRun}</button>
+                            )}
+                          </div>
+                          <div className="text-[#a0a0b8] text-[12px] mb-2">{run.location} · {t.home.inviteFrom(run.createdByName)}</div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex gap-2 text-[11px]">
+                              <span className="text-neon">{run.goingCount} {t.home.going}</span>
+                              <span className="text-accent-red">{run.notGoingCount} {t.home.notGoing}</span>
+                            </div>
+                            <div className="flex gap-1.5">
+                              {(() => {
+                                const myRsvp = run.rsvps.find(r => r.accountId === session.id)
+                                return (
+                                  <>
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                      onClick={() => handleRsvp(run.id, 'going')}
+                                      className={`px-3 py-1 rounded-lg text-[11px] font-semibold border ${myRsvp?.status === 'going' ? 'bg-neon/20 border-neon/30 text-neon' : 'bg-[#252540]/50 border-[#2a2a40] text-[#a0a0b8]'}`}
+                                    >
+                                      {t.home.going}
+                                    </motion.button>
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                      onClick={() => handleRsvp(run.id, 'not_going')}
+                                      className={`px-3 py-1 rounded-lg text-[11px] font-semibold border ${myRsvp?.status === 'not_going' ? 'bg-accent-red/20 border-accent-red/30 text-accent-red' : 'bg-[#252540]/50 border-[#2a2a40] text-[#a0a0b8]'}`}
+                                    >
+                                      {t.home.notGoing}
+                                    </motion.button>
+                                  </>
+                                )
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Members list */}
                   <div className="space-y-1.5 mb-3">
                     {[...team.members].sort((a, b) => {
@@ -744,6 +835,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
+                      onClick={() => { setShowScheduleOverlay(true); setSchedDate(''); setSchedTime(''); setSchedLocation(''); setScheduleFormError('') }}
                       className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-neon/10 border border-neon/20 text-neon py-2.5 text-[12px] font-semibold"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neon"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -812,6 +904,74 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
           </motion.div>
         )}
       </div>
+
+      {/* Schedule overlay */}
+      {showScheduleOverlay && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-[360px] mx-4"
+          >
+            <GlassCard className="p-5">
+              <div className="text-white text-[17px] font-semibold mb-4">{t.home.scheduleTitle}</div>
+
+              {scheduleFormError && (
+                <div className="text-accent-red text-[12px] mb-3" role="alert">{scheduleFormError}</div>
+              )}
+
+              <label className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-1.5 block">{t.home.selectDateTime}</label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="date"
+                  value={schedDate}
+                  onChange={e => { setSchedDate(e.target.value); setScheduleFormError('') }}
+                  className="flex-1 bg-[#252540] border border-[#2a2a40] rounded-xl px-3 py-2.5 text-white text-[13px] focus:outline-none focus:border-neon/50"
+                />
+                <input
+                  type="time"
+                  value={schedTime}
+                  onChange={e => { setSchedTime(e.target.value); setScheduleFormError('') }}
+                  className="flex-1 bg-[#252540] border border-[#2a2a40] rounded-xl px-3 py-2.5 text-white text-[13px] focus:outline-none focus:border-neon/50"
+                />
+              </div>
+
+              <label className="text-[#a0a0b8] text-[11px] font-medium uppercase tracking-wide mb-1.5 block">{t.home.selectLocation}</label>
+              <input
+                type="text"
+                value={schedLocation}
+                onChange={e => { setSchedLocation(e.target.value); setScheduleFormError('') }}
+                placeholder={t.home.locationPlaceholder}
+                className="w-full bg-[#252540] border border-[#2a2a40] rounded-xl px-3 py-2.5 text-white text-[13px] placeholder:text-[#6b6b8d] focus:outline-none focus:border-neon/50 mb-4"
+              />
+
+              <div className="flex gap-2.5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setShowScheduleOverlay(false); setScheduleFormError('') }}
+                  className="flex-1 rounded-xl bg-[#252540] border border-[#2a2a40] text-[#a0a0b8] py-2.5 text-[13px] font-semibold"
+                >
+                  {t.home.cancel}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleConfirmSchedule}
+                  disabled={scheduleSubmitting}
+                  className="flex-1 rounded-xl bg-neon/20 border border-neon/30 text-neon py-2.5 text-[13px] font-semibold disabled:opacity-50"
+                >
+                  {scheduleSubmitting ? '…' : t.home.confirmSchedule}
+                </motion.button>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }
@@ -903,9 +1063,9 @@ function RunPage({ session }: { session: Session }) {
             {t.run.startTraining}
           </motion.button>
         </div>
-      </div>
-    )
-  }
+    </div>
+  )
+}
 
   // ─── Active Run Mode ──────────────────────────────────────
   return (
