@@ -6,8 +6,8 @@ import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
 import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam, apiToggleStats, apiAskAi } from './api/client'
 import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
-import { MAPBOX_TOKEN, mapboxGeocode, mapboxDirections } from './api/mapbox'
-import type { GeocodeResult } from './api/mapbox'
+import { amapGeocode, amapDirections } from './api/amap'
+import type { AmapGeocodeResult } from './api/amap'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 import type { TeamData } from './team/team'
@@ -1151,16 +1151,8 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
 // ─── Page: Run ────────────────────────────────────────────
 
 interface RoutePoint { id: string; label: string; lat: number; lng: number }
-const PLACES: Record<string, RoutePoint> = {
-  home: { id: 'home', label: '家', lat: 31.2304, lng: 121.4737 },
-  company: { id: 'company', label: '公司', lat: 31.2397, lng: 121.4998 },
-  park: { id: 'park', label: '滨江公园', lat: 31.2462, lng: 121.5045 },
-  lake: { id: 'lake', label: '环湖绿道', lat: 31.2186, lng: 121.5532 },
-  gym: { id: 'gym', label: '体育中心', lat: 31.1843, lng: 121.4388 },
-  school: { id: 'school', label: '大学城', lat: 31.2001, lng: 121.4333 },
-}
 
-function RunMap({ start, end }: { start: RoutePoint; end: RoutePoint }) {
+function RunMap({ start, end, token }: { start: RoutePoint; end: RoutePoint; token: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const routeRef = useRef<L.Polyline | null>(null)
@@ -1170,30 +1162,24 @@ function RunMap({ start, end }: { start: RoutePoint; end: RoutePoint }) {
   useEffect(() => {
     let cancelled = false
     if (!routeRef.current) return
-    mapboxDirections(start.lat, start.lng, end.lat, end.lng).then(route => {
-      if (cancelled || !route) return
-      const pts: L.LatLngExpression[] = route.coordinates
+    amapDirections(token, `${start.lng},${start.lat}`, `${end.lng},${end.lat}`).then(res => {
+      if (cancelled || !res.ok || res.data.coordinates.length === 0) return
+      const pts: L.LatLngExpression[] = res.data.coordinates.map(([lng, lat]) => [lat, lng])
       routeRef.current?.setLatLngs(pts)
       mapRef.current?.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
     })
     return () => { cancelled = true }
-  }, [start, end])
+  }, [start, end, token])
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     const map = L.map(ref.current, { zoomControl: false, attributionControl: true })
     mapRef.current = map
-    if (MAPBOX_TOKEN) {
-      L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`, {
-        maxZoom: 18,
-        attribution: '&copy; Mapbox &copy; OpenStreetMap',
-      }).addTo(map)
-    } else {
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(map)
-    }
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+      subdomains: ['1', '2', '3', '4'],
+      maxZoom: 18,
+      attribution: '&copy; 高德地图',
+    }).addTo(map)
     const pts: L.LatLngExpression[] = [[start.lat, start.lng], [end.lat, end.lng]]
     routeRef.current = L.polyline(pts, { color: '#00ff88', weight: 4, opacity: 0.9 }).addTo(map)
     L.circleMarker([start.lat, start.lng], { radius: 8, color: '#00ff88', fillColor: '#00ff88', fillOpacity: 1 }).addTo(map).bindPopup(start.label)
@@ -1205,13 +1191,13 @@ function RunMap({ start, end }: { start: RoutePoint; end: RoutePoint }) {
 
   return (
     <div className="absolute inset-0 z-0">
-      <div ref={ref} className={`absolute inset-0 ${MAPBOX_TOKEN ? '' : 'leaflet-dark'}`} />
+      <div ref={ref} className="absolute inset-0 leaflet-dark" />
       {!ready && <div className="absolute inset-0 z-10 flex items-center justify-center"><span className="text-white/40 text-xs">Loading map…</span></div>}
     </div>
   )
 }
 
-function RunPage({ session }: { session: Session }) {
+function RunPage({ session, token }: { session: Session; token: string }) {
   const t = useT()
   const [active, setActive] = useState(false)
   const [xpFeedback, setXpFeedback] = useState<string | null>(null)
@@ -1220,33 +1206,33 @@ function RunPage({ session }: { session: Session }) {
   const [routeError, setRouteError] = useState<string | null>(null)
   const [endHint, setEndHint] = useState(false)
 
-  // Address search state (Mapbox geocoding)
+  // Address search state (AMap geocoding)
   const [startQuery, setStartQuery] = useState('')
   const [endQuery, setEndQuery] = useState('')
-  const [startResults, setStartResults] = useState<GeocodeResult[]>([])
-  const [endResults, setEndResults] = useState<GeocodeResult[]>([])
+  const [startResults, setStartResults] = useState<AmapGeocodeResult[]>([])
+  const [endResults, setEndResults] = useState<AmapGeocodeResult[]>([])
   const [searchingStart, setSearchingStart] = useState(false)
   const [searchingEnd, setSearchingEnd] = useState(false)
 
   useEffect(() => {
     const q = startQuery.trim()
-    if (!q || !MAPBOX_TOKEN) { setStartResults([]); setSearchingStart(false); return }
+    if (!q) { setStartResults([]); setSearchingStart(false); return }
     setSearchingStart(true)
     const timer = setTimeout(() => {
-      mapboxGeocode(q).then(r => { setStartResults(r); setSearchingStart(false) })
+      amapGeocode(token, q).then(r => { setStartResults(r.ok ? r.data.results : []); setSearchingStart(false) })
     }, 400)
     return () => clearTimeout(timer)
-  }, [startQuery])
+  }, [startQuery, token])
 
   useEffect(() => {
     const q = endQuery.trim()
-    if (!q || !MAPBOX_TOKEN) { setEndResults([]); setSearchingEnd(false); return }
+    if (!q) { setEndResults([]); setSearchingEnd(false); return }
     setSearchingEnd(true)
     const timer = setTimeout(() => {
-      mapboxGeocode(q).then(r => { setEndResults(r); setSearchingEnd(false) })
+      amapGeocode(token, q).then(r => { setEndResults(r.ok ? r.data.results : []); setSearchingEnd(false) })
     }, 400)
     return () => clearTimeout(timer)
-  }, [endQuery])
+  }, [endQuery, token])
 
   const handleStart = () => {
     if (!start || !end || start.id === end.id) {
@@ -1319,21 +1305,9 @@ return (
                   ))}
                 </div>
               )}
-              {MAPBOX_TOKEN && startQuery.trim() !== '' && !searchingStart && startResults.length === 0 && (
+              {startQuery.trim() !== '' && !searchingStart && startResults.length === 0 && (
                 <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
               )}
-            </div>
-            <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
-            <div className="flex gap-2 overflow-x-auto scrollable pb-1">
-              {Object.keys(PLACES).map(id => (
-                <button
-                  key={id}
-                  onClick={() => { setStart(PLACES[id]); setStartQuery(PLACES[id].label); setRouteError(null); setEndHint(false) }}
-                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${start?.id === id ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
-                >
-                  {t.run.places[id]}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -1368,24 +1342,9 @@ return (
                   ))}
                 </div>
               )}
-              {MAPBOX_TOKEN && endQuery.trim() !== '' && !searchingEnd && endResults.length === 0 && (
+              {endQuery.trim() !== '' && !searchingEnd && endResults.length === 0 && (
                 <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
               )}
-            </div>
-            <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
-            <div className="flex gap-2 overflow-x-auto scrollable pb-1">
-              {Object.keys(PLACES).map(id => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    if (start && start.id === id) { setEndHint(true); return }
-                    setEnd(PLACES[id]); setEndQuery(PLACES[id].label); setRouteError(null); setEndHint(false)
-                  }}
-                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${end?.id === id ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
-                >
-                  {t.run.places[id]}
-                </button>
-              ))}
             </div>
             {endHint && <div className="text-accent-red text-[11px] mt-1">{t.run.selectRouteFirst}</div>}
           </div>
@@ -1459,7 +1418,7 @@ return (
 
       {/* Map area */}
       <div className="flex-1 relative">
-        {start && end && <RunMap start={start} end={end} />}
+        {start && end && <RunMap start={start} end={end} token={token} />}
 
         {/* Pace overlay */}
         <div className="absolute top-3 left-3 z-10 glass rounded-xl px-3 py-2">
@@ -2284,7 +2243,7 @@ export default function App() {
     <div className="relative w-full h-full bg-[#0a0a0f] overflow-hidden">
       <PageWrap tab={tab}>
         {tab === 'home' && <Home session={session} token={token} onStartTraining={handleStartTraining} />}
-        {tab === 'run' && <RunPage session={session} />}
+        {tab === 'run' && <RunPage session={session} token={token} />}
         {tab === 'aicoach' && <AICoach token={token} />}
         {tab === 'robot' && <RobotPage />}
         {tab === 'profile' && <Profile session={session} onLogout={() => setLogoutConfirm(true)} />}
