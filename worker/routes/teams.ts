@@ -90,6 +90,7 @@ teamsRoutes.post('/leave', async (c) => {
   await c.env.DB
     .prepare('DELETE FROM team_members WHERE team_id = ? AND account_id = ?')
     .bind(team.id, account.id)
+    .run()
 
   const remaining = await c.env.DB
     .prepare('SELECT COUNT(*) as cnt FROM team_members WHERE team_id = ?')
