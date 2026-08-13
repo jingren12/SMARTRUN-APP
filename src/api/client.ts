@@ -100,6 +100,50 @@ export async function apiDeclineInvite(token: string, inviteId: string) {
   return request<{ ok: boolean }>('POST', `/api/invites/${inviteId}/decline`, undefined, token)
 }
 
+// ─── Scheduled Runs ────────────────────────────────────────────
+
+export interface ApiRsvp {
+  accountId: string
+  displayName: string
+  status: 'going' | 'not_going'
+}
+
+export interface ApiScheduledRun {
+  id: string
+  teamId: string
+  date: string
+  time: string
+  location: string
+  createdBy: string
+  createdByName: string
+  createdAt: string
+  rsvps: ApiRsvp[]
+  goingCount: number
+  notGoingCount: number
+}
+
+export async function apiCreateScheduledRun(
+  token: string,
+  teamId: string,
+  date: string,
+  time: string,
+  location: string,
+) {
+  return request<{ run: ApiScheduledRun }>('POST', '/api/scheduled-runs', { teamId, date, time, location }, token)
+}
+
+export async function apiGetScheduledRuns(token: string, teamId: string) {
+  return request<{ runs: ApiScheduledRun[] }>('GET', `/api/scheduled-runs?teamId=${encodeURIComponent(teamId)}`, undefined, token)
+}
+
+export async function apiSetRsvp(token: string, runId: string, status: 'going' | 'not_going') {
+  return request<{ ok: boolean }>('POST', `/api/scheduled-runs/${runId}/rsvp`, { status }, token)
+}
+
+export async function apiCancelScheduledRun(token: string, runId: string) {
+  return request<{ ok: boolean }>('DELETE', `/api/scheduled-runs/${runId}`, undefined, token)
+}
+
 // ─── Teams ───────────────────────────────────────────────────
 
 export async function apiGetTeam(token: string) {
