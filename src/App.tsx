@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode, type FormEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
   import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   CartesianGrid } from 'recharts'
@@ -9,6 +9,8 @@ import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
 import type { TeamData } from './team/team'
+import * as L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 // ─── Types ───────────────────────────────────────────────
 type Tab = 'home' | 'run' | 'aicoach' | 'robot' | 'profile'
@@ -1146,12 +1148,62 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
 
 // ─── Page: Run ────────────────────────────────────────────
 
+interface Place { id: string; lat: number; lng: number }
+const PLACES: Record<string, Place> = {
+  home: { id: 'home', lat: 31.2304, lng: 121.4737 },
+  company: { id: 'company', lat: 31.2397, lng: 121.4998 },
+  park: { id: 'park', lat: 31.2462, lng: 121.5045 },
+  lake: { id: 'lake', lat: 31.2186, lng: 121.5532 },
+  gym: { id: 'gym', lat: 31.1843, lng: 121.4388 },
+  school: { id: 'school', lat: 31.2001, lng: 121.4333 },
+}
+
+function RunMap({ startId, endId }: { startId: string; endId: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<L.Map | null>(null)
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    if (!ref.current || mapRef.current) return
+    const start = PLACES[startId]
+    const end = PLACES[endId]
+    if (!start || !end) return
+    const map = L.map(ref.current, { zoomControl: false, attributionControl: true })
+    mapRef.current = map
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
+    const pts: L.LatLngExpression[] = [[start.lat, start.lng], [end.lat, end.lng]]
+    L.polyline(pts, { color: '#00ff88', weight: 4, opacity: 0.9, dashArray: '8 6' }).addTo(map)
+    L.circleMarker([start.lat, start.lng], { radius: 8, color: '#00ff88', fillColor: '#00ff88', fillOpacity: 1 }).addTo(map).bindPopup('Start')
+    L.circleMarker([end.lat, end.lng], { radius: 8, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1 }).addTo(map).bindPopup('Finish')
+    map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
+    setReady(true)
+    return () => { map.remove(); mapRef.current = null }
+  }, [startId, endId])
+  return (
+    <div className="absolute inset-0 z-0">
+      <div ref={ref} className="absolute inset-0 leaflet-dark" />
+      {!ready && <div className="absolute inset-0 z-10 flex items-center justify-center"><span className="text-white/40 text-xs">Loading map…</span></div>}
+    </div>
+  )
+}
+
 function RunPage({ session }: { session: Session }) {
   const t = useT()
   const [active, setActive] = useState(false)
   const [xpFeedback, setXpFeedback] = useState<string | null>(null)
+  const [startId, setStartId] = useState<string | null>(null)
+  const [endId, setEndId] = useState<string | null>(null)
+  const [routeError, setRouteError] = useState<string | null>(null)
+  const [endHint, setEndHint] = useState(false)
 
   const handleStart = () => {
+    if (!startId || !endId || startId === endId) {
+      setRouteError(t.run.selectRouteFirst)
+      return
+    }
+    setRouteError(null)
     const result = addXp(session.id, 100)
     setXpFeedback(t.run.xpGained(100, result.level))
     setActive(true)
@@ -1188,12 +1240,39 @@ return (
 
           {/* Route Selection */}
           <SectionH title={t.run.chooseRoute} />
-          <div className="flex gap-2 mb-5 overflow-x-auto scrollable pb-1">
-            {['滨江公园 7.5km', '城市绿道 5km', '环湖路线 10km', '山地越野 12km'].map(r => (
-              <button key={r} className="shrink-0 glass rounded-2xl px-4 py-3 border border-[#2a2a40]/40 hover:border-neon/30 transition-colors">
-                <div className="text-white text-[13px] font-medium whitespace-nowrap">{t.routes[r] ?? r}</div>
-              </button>
-            ))}
+          <div className="mb-3">
+            <div className="text-[#a0a0b8] text-[11px] mb-2">{t.run.selectStart}</div>
+            <div className="flex gap-2 overflow-x-auto scrollable pb-1">
+              {Object.keys(PLACES).map(id => (
+                <button
+                  key={id}
+                  onClick={() => { setStartId(id); setRouteError(null); setEndHint(false) }}
+                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${startId === id ? 'bg-neon/20 text-neon border border-neon/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
+                >
+                  {t.run.places[id]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mb-5">
+            <div className="text-[#a0a0b8] text-[11px] mb-2">{t.run.selectEnd}</div>
+            <div className="flex gap-2 overflow-x-auto scrollable pb-1">
+              {Object.keys(PLACES).map(id => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    if (startId && id === startId) { setEndHint(true); return }
+                    setEndId(id)
+                    setRouteError(null)
+                    setEndHint(false)
+                  }}
+                  className={`shrink-0 rounded-2xl px-4 py-2 text-[12px] font-medium transition-all ${endId === id ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' : 'bg-[#252540]/50 text-[#a0a0b8] border border-transparent'}`}
+                >
+                  {t.run.places[id]}
+                </button>
+              ))}
+            </div>
+            {endHint && <div className="text-accent-red text-[11px] mt-1">{t.run.selectRouteFirst}</div>}
           </div>
 
           {/* Quick Stats */}
@@ -1228,6 +1307,7 @@ return (
           </GlassCard>
 
           {/* Start Button */}
+          {routeError && <div className="text-accent-red text-[11px] mb-2 text-center">{routeError}</div>}
           <motion.button whileTap={{ scale: 0.95 }} onClick={handleStart} className="w-full mb-8 py-4 rounded-2xl bg-neon text-black font-bold text-[17px] tracking-tight shadow-lg shadow-neon/20">
             {t.run.startTraining}
           </motion.button>
@@ -1264,24 +1344,20 @@ return (
 
       {/* Map area */}
       <div className="flex-1 relative">
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 40% 50%, #1a2a1a 1px, transparent 1px), radial-gradient(circle at 60% 30%, #1a1a2a 1px, transparent 1px)', backgroundSize: '25px 25px, 18px 18px' }} />
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 393 320">
-          <path d="M20,280 Q80,150 160,200 T240,120 T320,220 T360,180" fill="none" stroke="#00ff88" strokeWidth="2" strokeDasharray="5 3" opacity="0.5" />
-          <circle cx="160" cy="200" r="7" fill="#4a9eff" stroke="#000" strokeWidth="2" />
-          <circle cx="200" cy="176" r="6" fill="#00ff88" stroke="#000" strokeWidth="2" />
-          {/* Pace overlay */}
-          <div className="absolute top-3 left-3 glass rounded-xl px-3 py-2">
-            <div className="text-[#a0a0b8] text-[10px]">{t.run.currentPace}</div>
-            <div className="text-white text-xl font-bold font-mono">5:18</div>
-          </div>
-          <div className="absolute top-3 right-3 glass rounded-xl px-3 py-2 text-right">
-            <div className="text-[#a0a0b8] text-[10px]">{t.run.distanceRun}</div>
-            <div className="text-white text-xl font-bold">3.85{t.units.km}</div>
-          </div>
-        </svg>
+        {startId && endId && <RunMap startId={startId} endId={endId} />}
+
+        {/* Pace overlay */}
+        <div className="absolute top-3 left-3 z-10 glass rounded-xl px-3 py-2">
+          <div className="text-[#a0a0b8] text-[10px]">{t.run.currentPace}</div>
+          <div className="text-white text-xl font-bold font-mono">5:18</div>
+        </div>
+        <div className="absolute top-3 right-3 z-10 glass rounded-xl px-3 py-2 text-right">
+          <div className="text-[#a0a0b8] text-[10px]">{t.run.distanceRun}</div>
+          <div className="text-white text-xl font-bold">3.85{t.units.km}</div>
+        </div>
 
         {/* AI Voice Suggestion */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute bottom-4 left-4 right-4">
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute bottom-4 left-4 right-4 z-10">
           <GlassCard className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-accent-purple/20 flex items-center justify-center shrink-0 pulse-glow">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-accent-purple"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" stroke="currentColor" strokeWidth="1.5"/><path d="M19 10v2a7 7 0 01-14 0v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>

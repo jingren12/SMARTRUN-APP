@@ -113,3 +113,11 @@ body {
 .slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+.leaflet-container {
+  background: #0a0a0f;
+}
+
+.leaflet-dark {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.92) contrast(0.92);
+}
