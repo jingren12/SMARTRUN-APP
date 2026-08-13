@@ -25,6 +25,7 @@ export interface ApiTeamMember {
   status: string
   weeklyDist: number
   avgPace: string
+  statsShared: boolean
 }
 
 export interface ApiTeam {
@@ -156,4 +157,8 @@ export async function apiDisbandTeam(token: string) {
 
 export async function apiLeaveTeam(token: string) {
   return request<{ ok: boolean }>('POST', '/api/teams/leave', undefined, token)
+}
+
+export async function apiToggleStats(token: string) {
+  return request<{ statsShared: boolean }>('POST', '/api/teams/stats-toggle', undefined, token)
 }

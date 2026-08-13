@@ -96,6 +96,14 @@ export interface Translations {
     confirmDisband: string;
     confirmCancelRun: string;
     confirmLogout: string;
+    statsOverlay: string;
+    myStats: string;
+    statsShared: string;
+    shareMyStats: string;
+    hideMyStats: string;
+    noStatsShared: string;
+    weeklyDistance: string;
+    runCount: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
     planTitles: Record<string, string>;
@@ -309,6 +317,14 @@ const zh: Translations = {
       confirmDisband: '确认解散队伍？',
       confirmCancelRun: '确认取消约跑？',
       confirmLogout: '确认退出登录？',
+      statsOverlay: '团队统计',
+      myStats: '我的统计',
+      statsShared: '已分享',
+      shareMyStats: '分享我的统计',
+      hideMyStats: '隐藏我的统计',
+      noStatsShared: '暂无成员分享统计',
+      weeklyDistance: '周跑量',
+      runCount: '训练次数',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
       planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
@@ -542,6 +558,14 @@ const en: Translations = {
       confirmDisband: 'Disband the team?',
       confirmCancelRun: 'Cancel this run?',
       confirmLogout: 'Log out?',
+      statsOverlay: 'Team Stats',
+      myStats: 'My Stats',
+      statsShared: 'Shared',
+      shareMyStats: 'Share My Stats',
+      hideMyStats: 'Hide My Stats',
+      noStatsShared: 'No stats shared yet',
+      weeklyDistance: 'Weekly Distance',
+      runCount: 'Runs',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
       planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },

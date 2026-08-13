@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS team_members (
   status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted')),
   weekly_dist REAL NOT NULL DEFAULT 0,
   avg_pace TEXT NOT NULL DEFAULT '0:00',
+  stats_shared INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
   FOREIGN KEY (account_id) REFERENCES accounts(id),
   PRIMARY KEY (team_id, account_id)

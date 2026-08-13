@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
-import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam } from './api/client'
+import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam, apiToggleStats } from './api/client'
 import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
@@ -250,6 +250,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const [schedLocation, setSchedLocation] = useState('')
   const [scheduleSubmitting, setScheduleSubmitting] = useState(false)
   const [scheduleFormError, setScheduleFormError] = useState('')
+  const [showStatsOverlay, setShowStatsOverlay] = useState(false)
   const [confirmAction, setConfirmAction] = useState<'leave' | 'disband' | 'cancelRun' | null>(null)
   const [confirmMessage, setConfirmMessage] = useState('')
   const [cancelRunId, setCancelRunId] = useState('')
@@ -906,6 +907,7 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
                   <div className="flex gap-2.5 pt-3 border-t border-[#2a2a40]/50">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
+                      onClick={() => setShowStatsOverlay(true)}
                       className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20 text-accent-blue py-2.5 text-[12px] font-semibold"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-blue"><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="18" cy="18" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8.2 10.7l7.6-3.4M8.2 13.3l7.6 3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -1051,6 +1053,70 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
         </motion.div>
       )}
     </div>
+    {showStatsOverlay && team && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+        onClick={() => setShowStatsOverlay(false)}
+      >
+        <motion.div
+          initial={{ y: 200, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="w-full max-w-[393px] rounded-t-3xl bg-[#1a1a2e] border-t border-[#2a2a40]/50 p-5 max-h-[80vh] overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white text-[17px] font-semibold">{t.home.statsOverlay}</h2>
+            <button onClick={() => setShowStatsOverlay(false)} className="text-[#6b6b8d] p-1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div className="space-y-2 mb-4">
+            {team.members.map(m => {
+              const isSelf = m.userId === session.id
+              const shared = (m as unknown as { statsShared?: boolean }).statsShared
+              return (
+                <div key={m.name} className="flex items-center gap-3 rounded-xl bg-[#252540]/30 p-3">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-neon/40 to-accent-blue/40 border border-white/10 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+                    {m.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-[13px] font-medium">{m.name}{isSelf && <span className="text-neon text-[10px] ml-1">({t.home.myStats})</span>}</div>
+                    <div className="flex gap-2 mt-1">
+                      {shared ? (
+                        <>
+                          <span className="text-[#a0a0b8] text-[11px]">{m.weeklyDist}{t.units.km} · {t.home.weeklyDistance}</span>
+                          <span className="text-[#a0a0b8] text-[11px]">{m.avgPace} · {t.units.perKm}</span>
+                        </>
+                      ) : (
+                        <span className="text-[#6b6b8d] text-[11px]">—</span>
+                      )}
+                    </div>
+                  </div>
+                  {isSelf && (
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={async () => {
+                        const result = await apiToggleStats(token)
+                        if (result.ok) {
+                          const teamResult = await apiGetTeam(token)
+                          if (teamResult.ok && teamResult.data.team) setTeam(teamResult.data.team as unknown as TeamData)
+                        }
+                      }}
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold ${shared ? 'bg-neon/20 border border-neon/30 text-neon' : 'bg-[#252540]/70 border border-[#2a2a40]/50 text-[#a0a0b8]'}`}
+                    >
+                      {shared ? t.home.hideMyStats : t.home.shareMyStats}
+                    </motion.button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
     {confirmAction && (
       <ConfirmDialog
         message={confirmMessage}

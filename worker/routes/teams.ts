@@ -26,6 +26,7 @@ interface TeamMemberRow {
   status: string
   weekly_dist: number
   avg_pace: string
+  stats_shared: number
 }
 
 // GET /api/teams — get current user's team
@@ -47,7 +48,7 @@ teamsRoutes.get('/', async (c) => {
 
   const membersResult = await c.env.DB
     .prepare(
-      `SELECT tm.account_id, tm.status, tm.weekly_dist, tm.avg_pace, a.display_name
+      `SELECT tm.account_id, tm.status, tm.weekly_dist, tm.avg_pace, tm.stats_shared, a.display_name
        FROM team_members tm JOIN accounts a ON tm.account_id = a.id
        WHERE tm.team_id = ?`,
     )
@@ -66,6 +67,7 @@ teamsRoutes.get('/', async (c) => {
         status: m.status,
         weeklyDist: m.weekly_dist,
         avgPace: m.avg_pace,
+        statsShared: m.stats_shared === 1,
       })),
     },
   })
@@ -118,6 +120,35 @@ teamsRoutes.post('/leave', async (c) => {
   }
 
   return c.json({ ok: true })
+})
+
+// POST /api/teams/stats-toggle — toggle stats visibility for current user
+teamsRoutes.post('/stats-toggle', async (c) => {
+  const account = c.get('account')
+
+  const team = await c.env.DB
+    .prepare(
+      `SELECT t.id FROM teams t
+       JOIN team_members tm ON tm.team_id = t.id
+       WHERE tm.account_id = ? AND tm.status = 'accepted'
+       LIMIT 1`,
+    )
+    .bind(account.id)
+    .first<{ id: string }>()
+
+  if (!team) return c.json({ ok: false, error: 'no_team' }, 404)
+
+  await c.env.DB
+    .prepare('UPDATE team_members SET stats_shared = CASE WHEN stats_shared = 0 THEN 1 ELSE 0 END WHERE team_id = ? AND account_id = ?')
+    .bind(team.id, account.id)
+    .run()
+
+  const updated = await c.env.DB
+    .prepare('SELECT stats_shared FROM team_members WHERE team_id = ? AND account_id = ?')
+    .bind(team.id, account.id)
+    .first<{ stats_shared: number }>()
+
+  return c.json({ ok: true, statsShared: updated!.stats_shared === 1 })
 })
 
 // DELETE /api/teams — disband (only creator)
