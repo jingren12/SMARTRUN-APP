@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
   CartesianGrid } from 'recharts'
 import { useT, useLang } from './i18n/context'
 import type { AuthMode, AuthErrorCode } from './data/types'
-import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam, apiToggleStats } from './api/client'
+import { apiSignUp, apiSignIn, apiGetAccounts, apiGetInvites, apiSendInvite, apiAcceptInvite, apiDeclineInvite, apiGetTeam, apiDisbandTeam, apiCreateScheduledRun, apiGetScheduledRuns, apiSetRsvp, apiCancelScheduledRun, apiLeaveTeam, apiToggleStats, apiAskAi } from './api/client'
 import type { ApiAccount, ApiInvite, ApiScheduledRun } from './api/client'
 import { saveSession, getToken, getAccount, clearSession } from './api/session'
 import { getProgress, addXp, calcLevelProgress } from './progress/progress'
@@ -1339,15 +1339,16 @@ return (
 
 // ─── Page: AI Coach ─────────────────────────────────────
 
-function AICoach() {
+function AICoach({ token }: { token: string }) {
   const t = useT()
   const [inputValue, setInputValue] = useState('')
+  const [asking, setAsking] = useState(false)
   const [chatHistory, setChatHistory] = useState<{ q: string; a: string }[]>([
     { q: '如何提高步频？', a: '建议每周加入2次节奏跑，使用节拍器设置在180bpm。' },
     { q: '今天适合高强度训练吗？', a: '恢复指数82，疲劳度35，适合中等强度训练。' },
   ])
 
-  const getResponse = (question: string): string => {
+  const getLocalResponse = (question: string): string => {
     const q = question.toLowerCase()
     if (q.includes('步频') || q.includes('cadence') || q.includes('步幅')) return '步频建议维持在170-180spm。可以每周加入1-2次高步频训练，使用节拍器辅助。注意步频提高时保持自然呼吸节奏。'
     if (q.includes('配速') || q.includes('pace') || q.includes('速度')) return '配速提升需要渐进原则：每周总距离增幅不超过10%。间歇跑（400m-800m重复）和节奏跑（20-40分钟阈值配速）是有效手段。'
@@ -1363,11 +1364,17 @@ function AICoach() {
     return '感谢提问！可以试试问关于：步频、配速、心率、恢复、呼吸、拉伸、膝盖保护、跑鞋选择、马拉松备赛、跑步补给、力量训练等方面的问题。'
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const q = inputValue.trim()
-    if (!q) return
-    const a = getResponse(q)
-    setChatHistory(prev => [...prev, { q, a }])
+    if (!q || asking) return
+    setAsking(true)
+    const result = await apiAskAi(token, q)
+    if (result.ok) {
+      setChatHistory(prev => [...prev, { q, a: result.data.answer }])
+    } else {
+      setChatHistory(prev => [...prev, { q, a: getLocalResponse(q) }])
+    }
+    setAsking(false)
     setInputValue('')
   }
 
@@ -1499,8 +1506,12 @@ function AICoach() {
               placeholder={t.aicoach.askPlaceholder}
               className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
             />
-            <button onClick={handleSend} className="text-neon p-1">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z" strokeLinejoin="round"/></svg>
+            <button onClick={handleSend} disabled={asking} className="text-neon p-1 disabled:opacity-40">
+              {asking ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="animate-spin text-neon"><circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" opacity="0.25"/><path d="M20 12a8 8 0 0 0-8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z" strokeLinejoin="round"/></svg>
+              )}
             </button>
           </div>
           <div className="space-y-2 max-h-[320px] overflow-y-auto">
@@ -2083,7 +2094,7 @@ export default function App() {
       <PageWrap tab={tab}>
         {tab === 'home' && <Home session={session} token={token} onStartTraining={handleStartTraining} />}
         {tab === 'run' && <RunPage session={session} />}
-        {tab === 'aicoach' && <AICoach />}
+        {tab === 'aicoach' && <AICoach token={token} />}
         {tab === 'robot' && <RobotPage />}
         {tab === 'profile' && <Profile session={session} onLogout={() => setLogoutConfirm(true)} />}
       </PageWrap>

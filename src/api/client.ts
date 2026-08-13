@@ -162,3 +162,9 @@ export async function apiLeaveTeam(token: string) {
 export async function apiToggleStats(token: string) {
   return request<{ statsShared: boolean }>('POST', '/api/teams/stats-toggle', undefined, token)
 }
+
+// ─── AI Coach ─────────────────────────────────────────────────
+
+export async function apiAskAi(token: string, question: string) {
+  return request<{ answer: string }>('POST', '/api/ai/ask', { question }, token)
+}
