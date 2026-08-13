@@ -1515,8 +1515,8 @@ function AICoach({ token }: { token: string }) {
             </button>
           </div>
           <div className="space-y-2 max-h-[320px] overflow-y-auto">
-            {chatHistory.map((item, i) => (
-              <div key={i} className="bg-[#252540]/30 rounded-xl p-3">
+            {[...chatHistory].reverse().map((item, i) => (
+              <div key={chatHistory.length - i} className="bg-[#252540]/30 rounded-xl p-3">
                 <div className="text-white text-[12px] font-medium mb-1"><span className="text-neon">Q: </span>{item.q}</div>
                 <div className="text-[#a0a0b8] text-[12px]"><span className="text-accent-purple">A: </span>{item.a}</div>
               </div>
