@@ -5,10 +5,12 @@ import { accountsRoutes } from './routes/accounts'
 import { invitesRoutes } from './routes/invites'
 import { teamsRoutes } from './routes/teams'
 import { scheduledRunsRoutes } from './routes/scheduled-runs'
+import { aiRoutes } from './routes/ai'
 import { initSchema } from './db'
 
 export type Bindings = {
   DB: D1Database
+  DEEPSEEK_API_KEY?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -30,6 +32,7 @@ app.route('/api/accounts', accountsRoutes)
 app.route('/api/invites', invitesRoutes)
 app.route('/api/teams', teamsRoutes)
 app.route('/api/scheduled-runs', scheduledRunsRoutes)
+app.route('/api/ai', aiRoutes)
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 
