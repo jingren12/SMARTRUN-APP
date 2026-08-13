@@ -1,7 +1,12 @@
 import { Hono } from 'hono'
+import { initSchema } from '../db'
 import type { Bindings } from '../index'
 
 export const authRoutes = new Hono<{ Bindings: Bindings }>()
+
+async function ensureSchema(c: { env: { DB: D1Database } }): Promise<void> {
+  try { await initSchema(c.env.DB) } catch { /* init already done */ }
+}
 
 // SHA-256 hex digest via Web Crypto API (available in Workers runtime).
 async function sha256Hex(input: string): Promise<string> {
@@ -14,6 +19,7 @@ async function sha256Hex(input: string): Promise<string> {
 
 // POST /api/auth/signup
 authRoutes.post('/signup', async (c) => {
+  await ensureSchema(c)
   const { email, password, displayName } = await c.req.json<{
     email?: string
     password?: string
@@ -73,6 +79,7 @@ authRoutes.post('/signup', async (c) => {
 
 // POST /api/auth/signin
 authRoutes.post('/signin', async (c) => {
+  await ensureSchema(c)
   const { email, password } = await c.req.json<{ email?: string; password?: string }>()
 
   if (!email || !password) {

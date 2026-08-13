@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
+import { initSchema } from '../db'
 import type { Bindings } from '../index'
 import { requireAuth } from '../middleware'
+
+async function ensureSchema(c: { env: { DB: D1Database } }): Promise<void> {
+  try { await initSchema(c.env.DB) } catch { /* init already done */ }
+}
 
 export const accountsRoutes = new Hono<{
   Bindings: Bindings
@@ -16,6 +21,7 @@ interface AccountRow {
 
 // GET /api/accounts — list all accounts (auth-gated), excluding current user
 accountsRoutes.get('/', requireAuth, async (c) => {
+  await ensureSchema(c)
   const account = c.get('account')
   const result = await c.env.DB
     .prepare('SELECT id, email, display_name, created_at FROM accounts WHERE id != ? ORDER BY display_name')
@@ -35,6 +41,7 @@ accountsRoutes.get('/', requireAuth, async (c) => {
 
 // GET /api/accounts/search?q=xxx — search by display_name, excluding current user
 accountsRoutes.get('/search', requireAuth, async (c) => {
+  await ensureSchema(c)
   const account = c.get('account')
   const q = c.req.query('q')?.trim() || ''
   if (!q) return c.json({ ok: true, accounts: [] })

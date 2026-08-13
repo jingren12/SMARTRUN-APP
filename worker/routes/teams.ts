@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
+import { initSchema } from '../db'
 import type { Bindings } from '../index'
 import { requireAuth } from '../middleware'
+
+async function ensureSchema(c: { env: { DB: D1Database } }): Promise<void> {
+  try { await initSchema(c.env.DB) } catch { /* init already done */ }
+}
 
 export const teamsRoutes = new Hono<{
   Bindings: Bindings
@@ -25,6 +30,7 @@ interface TeamMemberRow {
 
 // GET /api/teams — get current user's team
 teamsRoutes.get('/', async (c) => {
+  await ensureSchema(c)
   const account = c.get('account')
 
   const team = await c.env.DB
@@ -52,6 +58,7 @@ teamsRoutes.get('/', async (c) => {
     ok: true,
     team: {
       name: team.name,
+      createdBy: team.created_by,
       members: membersResult.results.map((m) => ({
         name: m.display_name,
         userId: m.account_id,

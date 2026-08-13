@@ -14,6 +14,16 @@ const app = new Hono<{ Bindings: Bindings }>()
 
 app.use('/api/*', cors())
 
+// Init schema at boot, then before every route handler
+app.use('*', async (c, next) => {
+  try {
+    await initSchema(c.env.DB)
+  } catch (e) {
+    console.error('initSchema failed', e)
+  }
+  await next()
+})
+
 app.route('/api/auth', authRoutes)
 app.route('/api/accounts', accountsRoutes)
 app.route('/api/invites', invitesRoutes)
@@ -21,10 +31,10 @@ app.route('/api/teams', teamsRoutes)
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 
-// Initialize schema on first request (idempotent — uses IF NOT EXISTS)
-app.use('*', async (c, next) => {
-  await initSchema(c.env.DB)
-  await next()
+// Global error handler to surface real errors instead of generic 500
+app.onError((err, c) => {
+  console.error('Unhandled error', err)
+  return c.json({ ok: false, error: err.message || 'internal_error' }, 500)
 })
 
 export default app
