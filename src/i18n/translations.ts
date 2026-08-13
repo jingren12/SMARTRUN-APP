@@ -129,6 +129,14 @@ export interface Translations {
     metrics: { duration: string; distance: string; heartRate: string; cadence: string };
     sos: string;
     xpGained: (amount: number, level: number) => string;
+    // Route picker
+    startPoint: string;
+    endPoint: string;
+    selectStart: string;
+    selectEnd: string;
+    places: Record<string, string>;
+    routeReady: string;
+    selectRouteFirst: string;
   };
 
   // ─── AI Coach Page ───
@@ -352,6 +360,13 @@ const zh: Translations = {
     metrics: { duration: '时长', distance: '距离', heartRate: '心率', cadence: '步频' },
     sos: 'SOS',
     xpGained: (amount: number, level: number) => `+${amount} XP (Lv.${level})`,
+    startPoint: '起点',
+    endPoint: '终点',
+    selectStart: '选择起点',
+    selectEnd: '选择终点',
+    places: { home: '家', company: '公司', park: '滨江公园', lake: '环湖绿道', gym: '体育中心', school: '大学城' },
+    routeReady: '路线已就绪',
+    selectRouteFirst: '请先选择起终点',
   },
   aicoach: {
     title: 'AI 教练',
@@ -593,6 +608,13 @@ const en: Translations = {
     metrics: { duration: 'Duration', distance: 'Distance', heartRate: 'Heart Rate', cadence: 'Cadence' },
     sos: 'SOS',
     xpGained: (amount: number, level: number) => `+${amount} XP (Lv.${level})`,
+    startPoint: 'Start',
+    endPoint: 'Finish',
+    selectStart: 'Select start',
+    selectEnd: 'Select finish',
+    places: { home: 'Home', company: 'Office', park: 'Riverside Park', lake: 'Lake Loop', gym: 'Sports Center', school: 'University Town' },
+    routeReady: 'Route ready',
+    selectRouteFirst: 'Please pick start & finish',
   },
   aicoach: {
     title: 'AI Coach',
