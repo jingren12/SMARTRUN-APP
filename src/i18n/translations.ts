@@ -76,6 +76,19 @@ export interface Translations {
     noInvites: string;
     inviteFrom: (from: string) => string;
     captain: string;
+    // Scheduled runs
+    scheduleTitle: string;
+    selectDateTime: string;
+    selectLocation: string;
+    locationPlaceholder: string;
+    confirmSchedule: string;
+    cancel: string;
+    going: string;
+    notGoing: string;
+    noScheduledRun: string;
+    cancelRun: string;
+    scheduleError: string;
+    rsvpError: string;
     aiSuggestionTitle: string;
     aiSuggestionBody: string;
     planTitles: Record<string, string>;
@@ -270,6 +283,18 @@ const zh: Translations = {
     noInvites: '暂无邀请',
     inviteFrom: (from) => `来自 ${from} 的邀请`,
     captain: '队长',
+      scheduleTitle: '预约约跑',
+      selectDateTime: '选择日期和时间',
+      selectLocation: '选择地点',
+      locationPlaceholder: '输入约跑地点',
+      confirmSchedule: '确认预约',
+      cancel: '取消',
+      going: '去',
+      notGoing: '不去',
+      noScheduledRun: '暂无约跑',
+      cancelRun: '取消约跑',
+      scheduleError: '预约失败',
+      rsvpError: '操作失败',
       aiSuggestionTitle: 'AI 教练建议',
       aiSuggestionBody: '今日空气质量良好，适合户外训练。注意控制心率在区间2，保持节奏稳定。建议训练前补充300ml水。',
       planTitles: { '晨间有氧耐力跑': '晨间有氧耐力跑' },
@@ -484,6 +509,18 @@ const en: Translations = {
     noInvites: 'No Invites',
     inviteFrom: (from) => `Invite from ${from}`,
     captain: 'Captain',
+      scheduleTitle: 'Schedule Run',
+      selectDateTime: 'Select date & time',
+      selectLocation: 'Select location',
+      locationPlaceholder: 'Enter meeting location',
+      confirmSchedule: 'Confirm',
+      cancel: 'Cancel',
+      going: 'Going',
+      notGoing: 'Not going',
+      noScheduledRun: 'No scheduled runs',
+      cancelRun: 'Cancel run',
+      scheduleError: 'Failed to schedule',
+      rsvpError: 'Failed to update RSVP',
       aiSuggestionTitle: 'AI Coach Suggestion',
       aiSuggestionBody: 'Good air quality today — suitable for outdoor training. Stay in heart rate zone 2 and maintain a steady pace. Drink 300ml of water before training.',
       planTitles: { '晨间有氧耐力跑': 'Morning Aerobic Endurance Run' },
