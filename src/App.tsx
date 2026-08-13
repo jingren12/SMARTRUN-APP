@@ -250,8 +250,9 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   const [schedLocation, setSchedLocation] = useState('')
   const [scheduleSubmitting, setScheduleSubmitting] = useState(false)
   const [scheduleFormError, setScheduleFormError] = useState('')
-  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
+  const [confirmAction, setConfirmAction] = useState<'leave' | 'disband' | 'cancelRun' | null>(null)
   const [confirmMessage, setConfirmMessage] = useState('')
+  const [cancelRunId, setCancelRunId] = useState('')
 
   // Poll team data every 15s so members see live changes
   useEffect(() => {
@@ -299,8 +300,9 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
   }
 
   const confirmCancelRun = (runId: string) => {
+    setCancelRunId(runId)
     setConfirmMessage(t.home.confirmCancelRun)
-    setConfirmAction(() => { handleCancelRun(runId); setConfirmAction(null) })
+    setConfirmAction('cancelRun')
   }
 
   const refreshInvites = useCallback(() => {
@@ -378,20 +380,20 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
     setTeam(null)
   }
 
-  const confirmDeleteTeam = () => {
-    setConfirmMessage(t.home.confirmDisband)
-    setConfirmAction(() => { handleDeleteTeam(); setConfirmAction(null) })
-  }
-
   const handleLeaveTeam = async () => {
     if (!team) return
     await apiLeaveTeam(token)
     setTeam(null)
   }
 
+  const confirmDeleteTeam = () => {
+    setConfirmMessage(t.home.confirmDisband)
+    setConfirmAction('disband')
+  }
+
   const confirmLeaveTeam = () => {
     setConfirmMessage(t.home.confirmLeave)
-    setConfirmAction(() => { handleLeaveTeam(); setConfirmAction(null) })
+    setConfirmAction('leave')
   }
 
   const handleAcceptInvite = async (invite: ApiInvite) => {
@@ -1052,7 +1054,13 @@ function Home({ session, token, onStartTraining }: { session: Session; token: st
     {confirmAction && (
       <ConfirmDialog
         message={confirmMessage}
-        onConfirm={() => { const fn = confirmAction; setConfirmAction(null); fn() }}
+        onConfirm={() => {
+          const action = confirmAction
+          setConfirmAction(null)
+          if (action === 'disband') handleDeleteTeam()
+          else if (action === 'leave') handleLeaveTeam()
+          else if (action === 'cancelRun' && cancelRunId) handleCancelRun(cancelRunId)
+        }}
         onCancel={() => setConfirmAction(null)}
       />
     )}
