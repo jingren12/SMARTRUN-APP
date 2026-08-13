@@ -1319,6 +1319,9 @@ return (
                   ))}
                 </div>
               )}
+              {MAPBOX_TOKEN && startQuery.trim() !== '' && !searchingStart && startResults.length === 0 && (
+                <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
+              )}
             </div>
             <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
             <div className="flex gap-2 overflow-x-auto scrollable pb-1">
@@ -1364,6 +1367,9 @@ return (
                     </button>
                   ))}
                 </div>
+              )}
+              {MAPBOX_TOKEN && endQuery.trim() !== '' && !searchingEnd && endResults.length === 0 && (
+                <div className="mt-1 px-3 py-2 text-[11px] text-[#6b6b8d]">{t.run.noResults}</div>
               )}
             </div>
             <div className="text-[#6b6b8d] text-[10px] mb-1.5">{t.run.quickPicks}</div>
