@@ -1341,6 +1341,40 @@ return (
 
 function AICoach() {
   const t = useT()
+  const [inputValue, setInputValue] = useState('')
+  const [chatHistory, setChatHistory] = useState<{ q: string; a: string }[]>([
+    { q: '如何提高步频？', a: '建议每周加入2次节奏跑，使用节拍器设置在180bpm。' },
+    { q: '今天适合高强度训练吗？', a: '恢复指数82，疲劳度35，适合中等强度训练。' },
+  ])
+
+  const getResponse = (question: string): string => {
+    const q = question.toLowerCase()
+    if (q.includes('步频') || q.includes('cadence') || q.includes('步幅')) return '步频建议维持在170-180spm。可以每周加入1-2次高步频训练，使用节拍器辅助。注意步频提高时保持自然呼吸节奏。'
+    if (q.includes('配速') || q.includes('pace') || q.includes('速度')) return '配速提升需要渐进原则：每周总距离增幅不超过10%。间歇跑（400m-800m重复）和节奏跑（20-40分钟阈值配速）是有效手段。'
+    if (q.includes('心率') || q.includes('heart')) return '有氧基础训练心率建议维持在 zone2（130-150bpm）。高强度训练时心率可达 zone4-5，但每周高强度不超过总跑量的20%。'
+    if (q.includes('恢复') || q.includes('recovery') || q.includes('休息')) return '恢复指数82，状态良好。建议每跑4-5天安排1天主动恢复（慢跑或交叉训练）。充足的睡眠和营养补充同样重要。'
+    if (q.includes('呼吸') || q.includes('breath') || q.includes('喘')) return '推荐"三步一吸、两步一呼"的呼吸节奏。高强度时切换为"两步一吸、一步一呼"。保持腹式呼吸，避免浅胸式呼吸。'
+    if (q.includes('拉伸') || q.includes('stretch') || q.includes('热身')) return '跑前动态热身：高抬腿、后踢腿、开合跳各30秒。跑后静态拉伸：重点放松小腿、股四头肌和髂胫束，每个动作保持20-30秒。'
+    if (q.includes('膝盖') || q.includes('knee') || q.includes('受伤') || q.includes('injury')) return '跑步膝通常由股四头肌力量不足或跑量增加过快引起。建议：加强靠墙静蹲和单腿训练，控制周跑量增幅<10%，选择缓冲良好的跑鞋。'
+    if (q.includes('跑鞋') || q.includes('shoe') || q.includes('装备')) return '跑鞋建议每600-800km更换。日常训练选择缓震型（如亚瑟士Nimbus系列），速度训练选择轻量竞速型。注意脚型选择：内翻/外翻对应支撑/缓震。'
+    if (q.includes('马拉松') || q.includes('marathon') || q.includes('半马')) return '马拉松备赛周期通常16-20周。每周包含：1次间歇跑、1次节奏跑、1次长距离（LSD），其余为轻松跑。长距离每周递增不超过2km。赛前3周开始减量。'
+    if (q.includes('补给') || q.includes('补') || q.includes('water') || q.includes('能量')) return '跑步超过60分钟需要补给。每20-30分钟补水100-150ml。长距离（90min+）每小时补充30-60g碳水化合物（能量胶或运动饮料）。'
+    if (q.includes('力量') || q.includes('strength') || q.includes('核心')) return '每周安排2次力量训练对跑者有益：深蹲、弓步、硬拉锻炼下肢；平板支撑、鸟狗式锻炼核心。力量训练安排在跑后或单独日进行。'
+    return '感谢提问！可以试试问关于：步频、配速、心率、恢复、呼吸、拉伸、膝盖保护、跑鞋选择、马拉松备赛、跑步补给、力量训练等方面的问题。'
+  }
+
+  const handleSend = () => {
+    const q = inputValue.trim()
+    if (!q) return
+    const a = getResponse(q)
+    setChatHistory(prev => [...prev, { q, a }])
+    setInputValue('')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSend()
+  }
+
   return (
     <div className="h-full flex flex-col">
       <StatusBar />
@@ -1458,17 +1492,22 @@ function AICoach() {
         <SectionH title={t.aicoach.aiQa} />
         <GlassCard className="p-4 mb-6">
           <div className="flex items-center gap-3 bg-[#252540]/50 rounded-2xl px-4 py-3 mb-3">
-            <input placeholder={t.aicoach.askPlaceholder} className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]" />
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-neon"><path d="M22 2L11 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+            <input
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t.aicoach.askPlaceholder}
+              className="flex-1 bg-transparent text-white text-[13px] outline-none placeholder:text-[#4a4a6a]"
+            />
+            <button onClick={handleSend} className="text-neon p-1">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z" strokeLinejoin="round"/></svg>
+            </button>
           </div>
-          <div className="space-y-2">
-            {[
-              { q: '如何提高步频？', a: '建议每周加入2次节奏跑，使用节拍器设置在180bpm。' },
-              { q: '今天适合高强度训练吗？', a: '恢复指数82，疲劳度35，适合中等强度训练。' },
-            ].map((item, i) => (
+          <div className="space-y-2 max-h-[320px] overflow-y-auto">
+            {chatHistory.map((item, i) => (
               <div key={i} className="bg-[#252540]/30 rounded-xl p-3">
-                <div className="text-white text-[12px] font-medium mb-1">{t.aicoach.qPrefix}{t.aicoach.qaQuestions[item.q] ?? item.q}</div>
-                <div className="text-[#a0a0b8] text-[12px]">{t.aicoach.aPrefix}{t.aicoach.qaAnswers[item.a] ?? item.a}</div>
+                <div className="text-white text-[12px] font-medium mb-1"><span className="text-neon">Q: </span>{item.q}</div>
+                <div className="text-[#a0a0b8] text-[12px]"><span className="text-accent-purple">A: </span>{item.a}</div>
               </div>
             ))}
           </div>
