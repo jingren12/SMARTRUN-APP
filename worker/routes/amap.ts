@@ -33,7 +33,7 @@ amapRoutes.post('/geocode', async (c) => {
   try {
     const url =
       `${REST}/place/text?key=${encodeURIComponent(key)}` +
-      `&keywords=${encodeURIComponent(query)}&offset=5&page=1&extensions=base&citylimit=false`
+      `&keywords=${encodeURIComponent(query)}&offset=10&page=1&extensions=base&city=上海&citylimit=true`
     const res = await fetch(url)
     if (!res.ok) return c.json({ ok: false, error: 'amap_upstream_error' }, 502)
     const data = (await res.json()) as { status?: string; pois?: PoiRow[] }
