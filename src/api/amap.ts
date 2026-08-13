@@ -33,9 +33,9 @@ async function amapRequest<T>(token: string, path: string, body: unknown): Promi
 }
 
 export function amapGeocode(token: string, query: string): Promise<{ ok: true; data: { results: AmapGeocodeResult[] } } | { ok: false; error: string }> {
-  return amapRequest('/api/amap/geocode', token, { query })
+  return amapRequest(token, '/api/amap/geocode', { query })
 }
 
 export function amapDirections(token: string, origin: string, destination: string): Promise<{ ok: true; data: AmapDirectionsResult } | { ok: false; error: string }> {
-  return amapRequest('/api/amap/directions', token, { origin, destination })
+  return amapRequest(token, '/api/amap/directions', { origin, destination })
 }
