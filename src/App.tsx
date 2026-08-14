@@ -1168,7 +1168,7 @@ function RunMap({ start, end, token }: { start: RoutePoint; end: RoutePoint; tok
       attribution: '&copy; 高德地图',
     }).addTo(map)
     const pts: L.LatLngExpression[] = [[start.lat, start.lng], [end.lat, end.lng]]
-    routeRef.current = L.polyline(pts, { color: '#00ff88', weight: 4, opacity: 0.9 }).addTo(map)
+    routeRef.current = L.polyline(pts, { color: '#b026ff', weight: 4, opacity: 0.9 }).addTo(map)
     L.circleMarker([start.lat, start.lng], { radius: 8, color: '#00ff88', fillColor: '#00ff88', fillOpacity: 1 }).addTo(map).bindPopup(start.label)
     L.circleMarker([end.lat, end.lng], { radius: 8, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1 }).addTo(map).bindPopup(end.label)
     map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
