@@ -1158,19 +1158,6 @@ function RunMap({ start, end, token }: { start: RoutePoint; end: RoutePoint; tok
   const routeRef = useRef<L.Polyline | null>(null)
   const [ready, setReady] = useState(false)
 
-  // Fetch the real road route once both points are known.
-  useEffect(() => {
-    let cancelled = false
-    if (!routeRef.current) return
-    amapDirections(token, `${start.lng},${start.lat}`, `${end.lng},${end.lat}`).then(res => {
-      if (cancelled || !res.ok || res.data.coordinates.length === 0) return
-      const pts: L.LatLngExpression[] = res.data.coordinates.map(([lng, lat]) => [lat, lng])
-      routeRef.current?.setLatLngs(pts)
-      mapRef.current?.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
-    })
-    return () => { cancelled = true }
-  }, [start, end, token])
-
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     const map = L.map(ref.current, { zoomControl: false, attributionControl: true })
@@ -1186,8 +1173,16 @@ function RunMap({ start, end, token }: { start: RoutePoint; end: RoutePoint; tok
     L.circleMarker([end.lat, end.lng], { radius: 8, color: '#ff6b35', fillColor: '#ff6b35', fillOpacity: 1 }).addTo(map).bindPopup(end.label)
     map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] })
     setReady(true)
-    return () => { map.remove(); mapRef.current = null; routeRef.current = null }
-  }, [start, end])
+    let cancelled = false
+    // Replace the straight line with the real road route once it arrives.
+    amapDirections(token, `${start.lng},${start.lat}`, `${end.lng},${end.lat}`).then(res => {
+      if (cancelled || !res.ok || res.data.coordinates.length === 0) return
+      const road: L.LatLngExpression[] = res.data.coordinates.map(([lng, lat]) => [lat, lng])
+      routeRef.current?.setLatLngs(road)
+      map.fitBounds(L.latLngBounds(road), { padding: [40, 40] })
+    })
+    return () => { cancelled = true; map.remove(); mapRef.current = null; routeRef.current = null }
+  }, [start, end, token])
 
   return (
     <div className="absolute inset-0 z-0">
