@@ -1309,7 +1309,7 @@ return (
                 {searchingStart && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
               {startQuery.trim() !== '' && !pickedStart && startResults.length > 0 && (
-                <div className="absolute bottom-full left-0 right-0 mb-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-56 overflow-y-auto scrollable">
+                <div className="mt-1 glass rounded-xl overflow-hidden shadow-xl max-h-56 overflow-y-auto scrollable">
                   {startResults.map(r => (
                     <button
                       key={r.id}
@@ -1343,7 +1343,7 @@ return (
                 {searchingEnd && <span className="text-[#6b6b8d] text-[11px] shrink-0 animate-pulse">{t.run.searching}</span>}
               </div>
               {endQuery.trim() !== '' && !pickedEnd && endResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-30 glass rounded-xl overflow-hidden shadow-xl max-h-64 overflow-y-auto scrollable">
+                <div className="mt-1 glass rounded-xl overflow-hidden shadow-xl max-h-64 overflow-y-auto scrollable">
                   {endResults.map(r => (
                     <button
                       key={r.id}
