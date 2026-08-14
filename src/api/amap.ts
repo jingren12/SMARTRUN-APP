@@ -1,5 +1,5 @@
 // ─── AMap (高德地图) API Client ─────────────────────────────
-// Address search + walking directions, proxied through the Worker
+// Address search + cycling directions, proxied through the Worker
 // (the AMap REST API key stays server-side; CORS is not an issue).
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://smartrun-api.eos-run.workers.dev' : '')

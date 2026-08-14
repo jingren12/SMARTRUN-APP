@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import type { Bindings } from '../index'
 import { requireAuth } from '../middleware'
 
-// AMap (高德地图) proxy — geocoding + walking directions.
+// AMap (高德地图) proxy — geocoding + cycling directions.
 // The key is injected via the `AMAP_KEY` Cloudflare secret; the frontend
 // never sees it, and the AMap REST API's CORS limits never apply.
 export const amapRoutes = new Hono<{
@@ -53,11 +53,43 @@ amapRoutes.post('/geocode', async (c) => {
   }
 })
 
-interface WalkStep {
+interface RouteStep {
   polyline?: string
 }
 
-// POST /api/amap/directions — walking route between two points (direction/walking)
+interface RouteData {
+  status?: string
+  route?: { paths?: { distance?: string; duration?: string; steps?: RouteStep[] }[] }
+}
+
+function parsePath(path: { distance?: string; duration?: string; steps?: RouteStep[] }) {
+  const coordinates: [number, number][] = []
+  for (const step of path.steps ?? []) {
+    if (!step.polyline) continue
+    for (const pair of step.polyline.split(';')) {
+      const [lng, lat] = pair.split(',').map(Number)
+      if (Number.isFinite(lng) && Number.isFinite(lat)) coordinates.push([lng, lat])
+    }
+  }
+  return {
+    distanceM: Number(path.distance) || 0,
+    durationMin: Math.round((Number(path.duration) || 0) / 60),
+    coordinates,
+  }
+}
+
+async function fetchRoute(key: string, kind: 'bicycling' | 'walking', origin: string, destination: string) {
+  const url =
+    `${REST}/direction/${kind}?key=${encodeURIComponent(key)}` +
+    `&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`
+  const res = await fetch(url)
+  if (!res.ok) return null
+  const data = (await res.json()) as RouteData
+  if (data.status !== '1' || !data.route?.paths?.length) return null
+  return parsePath(data.route.paths[0])
+}
+
+// POST /api/amap/directions — cycling route (falls back to walking if cycling is unavailable)
 amapRoutes.post('/directions', async (c) => {
   const key = c.env.AMAP_KEY
   if (!key) return c.json({ ok: false, error: 'amap_not_configured' }, 503)
@@ -70,33 +102,15 @@ amapRoutes.post('/directions', async (c) => {
   if (!origin || !destination) return c.json({ ok: false, error: 'missing_coords' }, 400)
 
   try {
-    const url =
-      `${REST}/direction/walking?key=${encodeURIComponent(key)}` +
-      `&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`
-    const res = await fetch(url)
-    if (!res.ok) return c.json({ ok: false, error: 'amap_upstream_error' }, 502)
-    const data = (await res.json()) as {
-      status?: string
-      route?: { paths?: { distance?: string; duration?: string; steps?: WalkStep[] }[] }
+    const cycling = await fetchRoute(key, 'bicycling', origin, destination)
+    if (cycling) {
+      return c.json({ ok: true, mode: 'cycling', ...cycling })
     }
-    if (data.status !== '1' || !data.route?.paths?.length) {
-      return c.json({ ok: false, error: 'amap_no_route' }, 502)
+    const walking = await fetchRoute(key, 'walking', origin, destination)
+    if (walking) {
+      return c.json({ ok: true, mode: 'walking', ...walking })
     }
-    const path = data.route.paths[0]
-    const coordinates: [number, number][] = []
-    for (const step of path.steps ?? []) {
-      if (!step.polyline) continue
-      for (const pair of step.polyline.split(';')) {
-        const [lng, lat] = pair.split(',').map(Number)
-        if (Number.isFinite(lng) && Number.isFinite(lat)) coordinates.push([lng, lat])
-      }
-    }
-    return c.json({
-      ok: true,
-      distanceM: Number(path.distance) || 0,
-      durationMin: Math.round((Number(path.duration) || 0) / 60),
-      coordinates,
-    })
+    return c.json({ ok: false, error: 'amap_no_route' }, 502)
   } catch (e) {
     console.error('AMap directions failed', e)
     return c.json({ ok: false, error: 'amap_network_error' }, 502)
